@@ -1,24 +1,26 @@
 import os
 import asyncio
 import uuid
-from time import time
 from datetime import datetime, timedelta
+from pytz import timezone
 from pyrogram.types import InlineKeyboardButton
 from helper.database import db
-from Krito import BOT_NAME, ADMIN, TOKEN_TIMEOUT, SP_USERS, TUTORIAL_URL, SHORT_URL, MAX_SPACE
+from Krito import BOT_NAME, ADMIN, TOKEN_TIMEOUT, SP_USERS, TUTORIAL_URL, SHORT_URL
 from shortener import shorten_url
-from pytz import timezone
+
+IST = timezone("Asia/Kolkata")  # Set to Indian Standard Time
 
 async def validate_user(message, button=None):
     try:
         if not TOKEN_TIMEOUT:
             return None, button
-
         userid = message.from_user.id
         if userid in ADMIN or userid in SP_USERS:
             return None, button
         token, expire = await db.get_token_and_time(userid)
-        is_expired = (expire is None or (time() - expire) > TOKEN_TIMEOUT)
+        reset_time = get_next_reset_time(TOKEN_TIMEOUT)
+        now = datetime.now(IST)
+        is_expired = (expire is None or now >= reset_time)
         if is_expired:
             new_token = token if (expire is None and token) else str(uuid.uuid4())
             if expire is not None:
@@ -30,8 +32,20 @@ async def validate_user(message, button=None):
             return error_msg, button
         return None, button
     except Exception as e:
-        print(f"An error occurred in validate_user: {e}")
         return "An unexpected error occurred while validating the user.", button
+
+def get_next_reset_time(token_timeout):
+    """Parses time format 'HH:MM' and returns the next reset datetime."""
+    now = datetime.now(IST)    
+    try:
+        hour, minute = map(int, token_timeout.split(":"))
+        reset_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        # If the reset time has already passed today, set it for tomorrow
+        if now >= reset_time:
+            reset_time += timedelta(days=1)
+        return reset_time
+    except ValueError:
+        raise ValueError("Invalid TOKEN_TIMEOUT format. Use 'HH:MM' (e.g., '7:08').")
 
 def generate_buttons(new_token):
     buttons = []
@@ -42,8 +56,8 @@ def generate_buttons(new_token):
     buttons.append([
         InlineKeyboardButton(text='🔄 Refresh Token', url=shorten_url(f'https://telegram.me/{BOT_NAME}?start={new_token}')),
     ])
-    return buttons
-
+    return buttons  
+    
 async def check_user_limit(user_id):
     current_space_used = await db.get_space_used(user_id)
     if current_space_used > MAX_SPACE:
