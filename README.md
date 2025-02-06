@@ -75,7 +75,7 @@
 | `SESSION_STRING`         | Pyrogram session string or `None`.                                             |
 | `USER_CHAT`              | User chat ID where +4GB logs or updates are sent.                                   |
 | `BOT_NAME`               | Your bot’s username (without `@`).                                             |
-| `TOKEN_TIMEOUT`          | Time (in seconds) before tokens expire (e.g., `86400`).                       |
+| `TOKEN_TIMEOUT`          | Time (in hh:mm format) before tokens expire (e.g., `6:00, 16:56, 6:34, 00:00`).                       |
 | `MAX_PAGE`               | Maximum number of pages to display in pagination (e.g., `3`).                 |
 | `TUTORIAL_URL`           | URL for the tutorial or guide to use the bot.                                  |
 | `SHORT_URL`              | Shortened URL used in the bot.                                                 |
