@@ -67,7 +67,7 @@
 | `API_HASH`               | Obtain from [my.telegram.org](https://my.telegram.org).                        |
 | `WEBHOOK`                | Set `True` if using a web service, else `False`.                               |
 | `ADMIN`                  | List of bot admin IDs (space-separated).                                       |
-| `SP_USER`              | same as admin       |
+| `SP_USER`              | same as admin for token      |
 | `DB_URL`                 | MongoDB URL (from [cloud.mongodb.com](https://cloud.mongodb.com)).             |
 | `DB_NAME`                | MongoDB database name.                                                         |
 | `FORCE_SUB`              | Force subscription channel Id for multiple with space                           |
