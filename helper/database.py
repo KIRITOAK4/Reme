@@ -72,8 +72,7 @@ class Database:
         return None
 
     async def update_metadata_for_old_users(self):
-        users = self.col.find({})
-        async for user in users:
+        async for users in self.col.find({}):
             user_id = user["_id"]
             metadata = user.get("metadata")
             if not metadata:
