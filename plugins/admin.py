@@ -48,7 +48,7 @@ async def send_update_log(client, message):
         with open("Krito/__init__.py", "w", encoding="utf-8") as file:
             for line in lines:
                 if line.startswith("Text2 ="):
-                    file.write(f'Text2 = """{update_message}"""\n')
+                    file.write(f'Text2 = """{update_message.encode("utf-8").decode()}"""\n')
                 else:
                     file.write(line)
 
