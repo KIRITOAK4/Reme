@@ -6,6 +6,7 @@ import os, sys, time, asyncio, logging, datetime
 from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME
 from Krito.txt import Txt
 from datetime import datetime
+import subprocess
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
