@@ -20,11 +20,11 @@
 
 1. Clone the repository:
    ```
-   git clone Repo_Url
+   git clone https://github.com/KIRITOAK4/Rename
    ```
 2. Navigate to the repo directory:
    ```
-   cd Repo_Name
+   cd Rename
    ```
 3. Install the dependencies:
    ```
