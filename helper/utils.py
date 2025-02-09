@@ -4,7 +4,34 @@ from datetime import datetime
 from pytz import timezone
 from Krito import LOG_CHANNEL, Txt
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+import subprocess
+from datetime import datetime
 
+def get_latest_updates():
+    try:
+        result = subprocess.run(
+            ["git", "log", "--pretty=format:%h - %s (%cr)", "-5"],
+            capture_output=True,
+            text=True
+        )
+        commit_log = result.stdout.strip()
+        if not commit_log:
+            return "🚫 No recent updates found in the repository."
+        date_result = subprocess.run(
+            ["git", "log", "-1", "--pretty=format:%cd", "--date=iso"],
+            capture_output=True,
+            text=True
+        )
+        last_update = date_result.stdout.strip()  
+        if last_update:
+            formatted_date = datetime.strptime(last_update, "%Y-%m-%d %H:%M:%S %z").strftime("%d %B %Y, %I:%M %p %Z")
+            last_update_text = f"\n🕒 **Last Updated On:** {formatted_date}"
+        else:
+            last_update_text = "\n🕒 **Last Updated On:** Unknown"
+        return f"🆕 **Latest Updates in Repo:**\n\n{commit_log}{last_update_text}"
+    except Exception as e:
+        return f"❌ Error fetching update logs: {e}"
+        
 async def progress_for_pyrogram(current, total, ud_type, message, start):
     now = time.time()
     diff = now - start
