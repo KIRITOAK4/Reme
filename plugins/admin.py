@@ -7,7 +7,7 @@ from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME
 import subprocess
 import importlib
 from datetime import datetime
-from Krito import Text2  # Import Text2 from Krito/__init__.py
+import Krito  # Import Text2 from Krito/__init__.py
 
 @pbot.on_message(filters.command("update_log") & filters.user(ADMIN))
 async def send_update_log(client, message):
@@ -53,7 +53,7 @@ async def send_update_log(client, message):
                     file.write(line)
 
         # Reload module to apply changes
-        importlib.reload(Text2)
+        importlib.reload(Krito)
 
         # Send the update log
         await message.reply_text(update_message)
