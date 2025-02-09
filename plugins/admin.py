@@ -3,10 +3,52 @@ from pyrogram.types import Message
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, PeerIdInvalid
 import os, sys, time, asyncio, logging, datetime
-from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME
+from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME, Text2
+import subprocess
+import importlib
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+@pbot.on_message(filters.command("update_log") & filters.user(ADMIN))
+async def send_update_log(client, message):
+    try:
+        # Run Git command to get latest commit logs (last 5 commits)
+        result = subprocess.run(
+            ["git", "log", "--pretty=format:%h - %s (%cr)", "-5"],
+            capture_output=True,
+            text=True
+        )
+        commit_log = result.stdout.strip()
+        if not commit_log:
+            await message.reply_text("🚫 No recent updates found in the repository.")
+            return
+        date_result = subprocess.run(
+            ["git", "log", "-1", "--pretty=format:%cd", "--date=iso"],
+            capture_output=True,
+            text=True
+        )
+        last_update = date_result.stdout.strip()
+        if last_update:
+            formatted_date = datetime.strptime(last_update, "%Y-%m-%d %H:%M:%S %z").strftime("%d %B %Y, %I:%M %p %Z")
+            last_update_text = f"\n🕒 **Last Updated On:** {formatted_date}"
+        else:
+            last_update_text = "\n🕒 **Last Updated On:** Unknown"
+        update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}{last_update_text}"
+        with open("Krito/__init__.py", "r", encoding="utf-8") as file:
+            lines = file.readlines()
+        with open("Krito/__init__.py", "w", encoding="utf-8") as file:
+            for line in lines:
+                if line.startswith("Text2 ="):
+                    file.write(f'Text2 = """{update_message}"""\n')
+                else:
+                    file.write(line)
+        importlib.reload(Text2)
+        await message.reply_text(update_message)
+
+    except Exception as e:
+        await message.reply_text(f"❌ Error fetching update logs: {e}")
 
 @pbot.on_message(filters.command(["stats", "status"]))
 async def get_stats(bot, message):
@@ -81,24 +123,21 @@ async def broadcast_handler(bot: Client, m: Message):
     all_users = await db.get_all_users()
     broadcast_msg = m.reply_to_message
     sts_msg = await m.reply_text("Bʀᴏᴀᴅᴄᴀꜱᴛ Sᴛᴀʀᴛᴇᴅ..!") 
-    done = 0
-    failed = 0
-    success = 0
+    done, failed, success = 0, 0, 0
     start_time = time.time()
     total_users = await db.total_users_count()
+
     async for user in all_users:
         sts = await send_msg(user['_id'], broadcast_msg)
         if sts == 200:
-           success += 1
+            success += 1
         else:
-           failed += 1
+            failed += 1
         if sts == 400:
-           await db.delete_user(user['_id'])
+            await db.delete_user(user['_id'])
         done += 1
-        if not done % 20:
-           await sts_msg.edit(f"Bʀᴏᴀᴅᴄᴀꜱᴛ Iɴ Pʀᴏɢʀᴇꜱꜱ: \nTᴏᴛᴀʟ Uꜱᴇʀꜱ {total_users} \nCᴏᴍᴩʟᴇᴛᴇᴅ: {done} / {total_users}\nSᴜᴄᴄᴇꜱꜱ: {success}\nFᴀɪʟᴇᴅ: {failed}")
-    completed_in = datetime.timedelta(seconds=int(time.time() - start_time))
-    await sts_msg.edit(f"Bʀᴏᴀᴅᴄᴀꜱᴛ Cᴏᴍᴩʟᴇᴛᴇᴅ: \nCᴏᴍᴩʟᴇᴛᴇᴅ Iɴ `{completed_in}`.\n\nTᴏᴛᴀʟ Uꜱᴇʀꜱ {total_users}\nCᴏᴍᴩʟᴇᴛᴇᴅ: {done} / {total_users}\nSᴜᴄᴄᴇꜱꜱ: {success}\nFᴀɪʟᴇᴅ: {failed}")
+        if done % 20 == 0:
+            await sts_msg.edit(f"Bʀᴏᴀᴅᴄᴀꜱᴛ Iɴ Pʀᴏɢʀᴇꜱꜱ:\nTᴏᴛᴀʟ Uꜱᴇʀꜱ: {total_users}\nCᴏᴍᴩʟᴇᴛᴇᴅ: {done}/{total_users}\nSᴜᴄᴄᴇꜱꜱ: {success}\nFᴀɪʟᴇᴅ: {failed}")
 
 async def send_msg(user_id, message):
     try:
@@ -107,14 +146,8 @@ async def send_msg(user_id, message):
     except FloodWait as e:
         await asyncio.sleep(e.value)
         return await send_msg(user_id, message)
-    except InputUserDeactivated:
-        logger.info(f"{user_id} : Dᴇᴀᴄᴛɪᴠᴀᴛᴇᴅ")
-        return 400
-    except UserIsBlocked:
-        logger.info(f"{user_id} : Bʟᴏᴄᴋᴇᴅ Tʜᴇ Bᴏᴛ")
-        return 400
-    except PeerIdInvalid:
-        logger.info(f"{user_id} : Uꜱᴇʀ Iᴅ Iɴᴠᴀʟɪᴅ")
+    except (InputUserDeactivated, UserIsBlocked, PeerIdInvalid):
+        logger.info(f"{user_id} : User issue (deactivated/blocked/invalid ID)")
         return 400
     except Exception as e:
         logger.error(f"{user_id} : {e}")
