@@ -48,7 +48,7 @@ class Database:
         return count
 
     async def get_all_users(self):
-        all_users = await self.col.find({}).to_list(None)  # Convert cursor to list
+        all_users = await self.col.find({})
         return all_users
 
     async def delete_user(self, user_id):
