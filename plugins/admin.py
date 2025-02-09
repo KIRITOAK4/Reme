@@ -3,11 +3,46 @@ from pyrogram.types import Message
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, PeerIdInvalid
 import os, sys, time, asyncio, logging, datetime
-from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME
+from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME, Txt
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+@pbot.on_message(filters.command("update_log") & filters.user(ADMIN))
+async def send_update_log(client, message):
+    try:
+        # Run Git command to get latest commit logs (last 5 commits)
+        result = subprocess.run(
+            ["git", "log", "--pretty=format:%h - %s (%cr)", "-5"],
+            capture_output=True,
+            text=True
+        )
+
+        commit_log = result.stdout.strip()
+        if not commit_log:
+            await message.reply_text("🚫 No recent updates found in the repository.")
+            return
+
+        # Fetch last updated date (latest commit timestamp)
+        date_result = subprocess.run(
+            ["git", "log", "-1", "--pretty=format:%cd", "--date=iso"],
+            capture_output=True,
+            text=True
+        )
+
+        last_update = date_result.stdout.strip()
+        if last_update:
+            formatted_date = datetime.strptime(last_update, "%Y-%m-%d %H:%M:%S %z").strftime("%d %B %Y, %I:%M %p %Z")
+            last_update_text = f"\n🕒 **Last Updated On:** {formatted_date}"
+        else:
+            last_update_text = "\n🕒 **Last Updated On:** Unknown"
+        update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}{last_update_text}"
+        Txt.Text_message = update_message
+        await message.reply_text(update_message)
+
+    except Exception as e:
+        await message.reply_text(f"❌ Error fetching update logs: {e}")
 
 @pbot.on_message(filters.command(["stats", "status"]))
 async def get_stats(bot, message):
