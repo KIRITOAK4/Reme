@@ -1,5 +1,6 @@
 import os, logging, sys, re, time
 from pyrogram import Client
+from .txt import Txt
 
 id_pattern = re.compile(r'^.\d+$')
 
@@ -43,16 +44,7 @@ SHORTEN_KEY = os.environ.get("SHORTEN_KEY", "atglinks.com ea08e13411f489f3e84f9b
 LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", -1001682783965))
 WEBHOOK = bool(os.environ.get("WEBHOOK", True))
 
-Text = os.environ.get("Text", """●     °    •      ○    ●   •  ●    ○   •  ●
-
-○       ●      °    ●    •     ○   ●   ○  •
-ㅤㅤㅤㅤㅤㅤ(*≧ω≦*)
-┏━━━━━━━  ✦  ✦ ━━━━━━━━┓
-┃🔈𝙽𝙰𝙼𝙴   ○○○  {first_name}
-┃👥 𝙼𝙴𝙽𝚃𝙸𝙾𝙽   ○○○  {mention}
-┃🆔 𝙸𝙳   ○○○  {id}
-┃👤 𝚄𝚂𝙴𝚁𝙽𝙰𝙼𝙴   ○○○  {username}
-┗━━━━━━━━ ✦ ✦━━━━━━━━┛""")
+Text = Txt.TEXT
 
 #--------------------------------Text1-------------------------
 
@@ -63,39 +55,11 @@ Text1 = os.environ.get("Text1", """☞☞☞ ☞☞ 𝐻𝐸𝐿𝑃 𝑃𝐴�
 ☞ ┃⌨ /set_chatid - 𝐒𝐞𝐭 𝐂𝐡𝐚𝐭𝐈𝐝 𝐎𝐧𝐥𝐲 𝐟𝐨𝐫 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 𝐚𝐧𝐝 𝐚𝐝𝐝 𝐦𝐞 𝐚𝐬 𝐚𝐝𝐦𝐢𝐧 𝐚𝐬 𝐠𝐢𝐯𝐞𝐧 𝐂𝐡𝐚𝐭𝐈𝐝.""")
 #-----------------------------Text2-------------------------
 
-Text2 = os.environ.get("Text2", """👋 𝙺𝙾𝙽𝙸𝙲𝙷𝙸𝚆𝙰;  {first_name}
-
-1.》😏𝚃𝙷𝙸𝚂 𝙱𝙾𝚃 𝚁𝙴𝙿𝙾 𝙸𝚂 𝙿𝚁𝙸𝚅𝙰𝚃𝙴 𝙱𝚄𝚃 𝙽𝙾𝚃 𝙲𝙾𝙼𝙿𝙻𝙴𝚃𝙴𝙻𝚈 𝙿𝚁𝙸𝚅𝙰𝚃𝙴 .....
-
-2.》🧑‍💻 𝙸 𝙰𝙼 𝚄𝚂𝙸𝙽𝙶 𝙿𝚈𝚁𝙾-𝙱𝙾𝚃𝚉 𝚁𝙴𝙿𝙾 𝙰𝚂 𝙱𝙰𝚂𝙴 𝚁𝙴𝙿𝙾 𝙰𝙽𝙳 𝙾𝚃𝙷𝙴𝚁 𝙴𝚇𝚃𝚁𝙰 𝚄𝙿𝙳𝙰𝚃𝙴𝚂 𝙸𝚂 𝙳𝙾𝙽𝙴 𝙱𝚈 𝙼𝙴.....
-
-3.》📮𝙱𝙰𝚂𝙸𝙲𝙰𝙻𝙻𝚈 𝙽𝙾𝚃 𝙼𝙸𝙽𝙴 𝙸𝙳𝙴𝙰𝚂 𝙱𝚄𝚃 𝙸 𝙷𝙰𝚅𝙴 𝚃𝙰𝙺𝙴𝙽 𝚃𝙷𝙴 𝙸𝙳𝙴𝙰𝚂 𝙵𝚁𝙾𝙼 𝙾𝚃𝙷𝙴𝚁 𝙱𝙾𝚃𝚂.....
-
-4.》❌𝙸 𝙰𝙼 𝙽𝙾𝚃 𝙰 𝙿𝚁𝙾𝙵𝙴𝚂𝚂𝙸𝙾𝙽𝙰𝙻 𝙳𝙴𝚅𝙴𝙻𝙾𝙿𝙴𝚁 𝙱𝚄𝚃 𝙹𝚄𝚂𝚃 𝙻𝙸𝙺𝙴𝙳 𝚃𝙷𝙴 𝙾𝚃𝙷𝙴𝚁 𝙱𝙾𝚃 𝙵𝙴𝙰𝚃𝚄𝚁𝙴𝚂 𝚂𝙾 𝙸 𝙰𝙳𝙳𝙴𝙳 𝙸𝙽 𝙸𝚃...""")
+Text2 = Txt.TEXT_MESSAGE2
 
 #●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●Text3●●●●●●●●●●●●●●●●●●●●●●●●●
 
-Text3 = os.environ.get("Text3", """ 
-ㅤㅤㅤㅤㅤㅤ[ᴄʀᴇᴅɪᴛs](tg://user?id={id}) 
-ㅤㅤㅤ   ●●●●●●●●●●●●●●●●ㅤㅤㅤ
-ㅤㅤㅤ   𝙲𝚛𝚎𝚊𝚝𝚘𝚛𝚜 𝙾𝚏 𝙿𝚢𝚛𝚘-𝙱𝚘𝚝𝚣...
-        +2gb Shadow Blade...
-ㅤㅤ     𝙾𝚝𝚑𝚎𝚛 𝙲𝚛𝚎𝚊𝚝𝚘𝚛𝚜 𝙸𝚍𝚎𝚊𝚜...ㅤㅤㅤ
-ㅤㅤ     𝙰𝚗𝚍 𝙼𝚢𝚜𝚎𝚕𝚏ㅤㅤㅤㅤㅤㅤㅤ
-ㅤㅤㅤㅤ  ●●●●●●●●●●●●●●●●ㅤㅤ
-
-𝚃𝙷𝙸𝚂 𝙱𝙾𝚃 𝙸𝚂 𝙼𝙰𝙳𝙴 𝙱𝚈 [{first_name}](tg://user?id={id}) ....ㅤ
-
-   -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-
-               ┏━━━━━━━━━━┓ 
-ㅤㅤ        ℹ️ 𝗔𝗻𝘆 𝗢𝘁𝗵𝗲𝗿 𝗛𝗲𝗹𝗽
-               ┗━━━━━━━━━━┛
-☛┃ [ℂ𝕣𝕖𝕒𝕥𝕠𝕣](tg://user?id={id})
-☛┃ [𝗚𝗿𝗼𝘂𝗽](https://t.me/KIRIGAYA_ASUNA)
-☛┃ [𝗖𝗵𝗮𝗻𝗻𝗲𝗹](https://t.me/kirigayayuki)
-☛┃ 🄷🄴🄻🄿/🅂🅄🄿🄿🄾🅁🅃 [𝗖𝗢𝗡𝗧𝗔𝗖𝗧](http://t.me/devil_testing_bot)
-☛┃ 𝕄𝕠𝕕𝕚𝕗𝕚𝕖𝕕 𝕓𝕪 [ℕ𝕆𝕆𝔹_𝕂𝔸ℕ𝔾𝔼ℝ](https://t.me/kirigaya_asuna)""")
+Text3 = Txt.TEXT_MESSAGE3
 
 # -------------------------------DEFAULT---------------------------------------
 TRIGGERS = os.environ.get("TRIGGERS", "/ . !").split()
@@ -121,12 +85,3 @@ if isinstance(SESSION_STRING, str) and SESSION_STRING != "None":
         LOGS.exception(e)
         sys.exit()
 
-class Txt(object):
-
-    PROGRESS_BAR = """<b>\n
-╭━━━━❰ᴘʀᴏɢʀᴇss ʙᴀʀ❱━➣
-┣⪼ 🗃️ Sɪᴢᴇ: {1} | {2}
-┣⪼ ⏳️ Dᴏɴᴇ : {0}%
-┣⪼ 🚀 Sᴩᴇᴇᴅ: {3}/s
-┣⪼ ⏰️ Eᴛᴀ: {4}
-╰━━━━━━━━━━━━━━━➣ </b>"""
