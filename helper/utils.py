@@ -2,7 +2,8 @@ import math
 import time
 from datetime import datetime
 from pytz import timezone
-from Krito import LOG_CHANNEL, Txt
+from Krito import LOG_CHANNEL
+from Krito.txt import Txt
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime
 
