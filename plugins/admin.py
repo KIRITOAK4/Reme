@@ -3,7 +3,8 @@ from pyrogram.types import Message
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, PeerIdInvalid
 import os, sys, time, asyncio, logging, datetime
-from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME, Txt
+from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME
+from Krito.txt import Txt
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ async def send_update_log(client, message):
         else:
             last_update_text = "\n🕒 **Last Updated On:** Unknown"
         update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}{last_update_text}"
-        Txt.Text_message = update_message
+        Txt.TEXT_MESSAGE2 = update_message
         await message.reply_text(update_message)
 
     except Exception as e:
