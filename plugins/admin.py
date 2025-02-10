@@ -6,45 +6,28 @@ import os, sys, time, asyncio, logging, datetime
 from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME
 from Krito.txt import Txt
 from datetime import datetime
-import subprocess
+import requests
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+GITHUB_REPO = "KIRITOAK4/Rename"  # Change this to your actual repo
+
 @pbot.on_message(filters.command("update_log"))
 async def send_update(client, message):
     try:
-        # Run Git command to get latest commit logs (last 5 commits)
-        result = subprocess.run(
-            ["git", "log", "--pretty=format:%h - %s (%cr)", "-5"],
-            capture_output=True,
-            text=True
-        )
-
-        commit_log = result.stdout.strip()
-        if not commit_log:
-            await message.reply_text("🚫 No recent updates found in the repository.")
+        url = f"https://api.github.com/repos/{GITHUB_REPO}/commits?per_page=5"
+        response = requests.get(url)
+        if response.status_code != 200:
+            await message.reply_text("🚫 Failed to fetch updates from GitHub.")
             return
-
-        # Fetch last updated date (latest commit timestamp)
-        date_result = subprocess.run(
-            ["git", "log", "-1", "--pretty=format:%cd", "--date=iso"],
-            capture_output=True,
-            text=True
-        )
-
-        last_update = date_result.stdout.strip()
-        if last_update:
-            formatted_date = datetime.strptime(last_update, "%Y-%m-%d %H:%M:%S %z").strftime("%d %B %Y, %I:%M %p %Z")
-            last_update_text = f"\n🕒 **Last Updated On:** {formatted_date}"
-        else:
-            last_update_text = "\n🕒 **Last Updated On:** Unknown"
-        update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}{last_update_text}"
-        Txt.TEXT_MESSAGE2 = update_message
+        commits = response.json()
+        commit_log = "\n".join(f"{c['sha'][:7]} - {c['commit']['message']} ({c['commit']['committer']['date']})"
+                               for c in commits)
+        update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}"
         await message.reply_text(update_message)
-
     except Exception as e:
-        await message.reply_text(f"❌ Error fetching update logs: {e}")
+        await message.reply_text(f"❌ Error fetching update logs:\n`{e}`")
 
 @pbot.on_message(filters.command(["stats", "status"]))
 async def get_stats(bot, message):
