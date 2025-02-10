@@ -29,6 +29,8 @@ async def start(client, message):
         if not await db.is_user_exist(user_id):
             await db.add_user(client, message)
 
+        page_number = 1  # Always start from Page 1
+
         if len(message.command) > 1:
             input_token = message.command[1]
             stored_token, stored_time = await db.get_token_and_time(user_id)
