@@ -11,20 +11,29 @@ import requests
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-GITHUB_REPO = "KIRITOAK4/Rename"  # Change this to your actual repo
+GITHUB_REPO = "KIRITOAK4/Rename"  # Your private repo
+GITHUB_TOKEN = "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"  # Load from environment variables
 
 @pbot.on_message(filters.command("update_log"))
 async def send_update(client, message):
     try:
+        if not GITHUB_TOKEN:
+            await message.reply_text("🚫 GitHub token is missing. Set it in environment variables.")
+            return
+
         url = f"https://api.github.com/repos/{GITHUB_REPO}/commits?per_page=5"
-        response = requests.get(url)
+        headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
+        response = requests.get(url, headers=headers)
         if response.status_code != 200:
-            await message.reply_text("🚫 Failed to fetch updates from GitHub.")
+            await message.reply_text(f"🚫 Failed to fetch updates from GitHub: {response.json().get('message', 'Unknown error')}")
             return
         commits = response.json()
-        commit_log = "\n".join(f"{c['sha'][:7]} - {c['commit']['message']} ({c['commit']['committer']['date']})"
-                               for c in commits)
-        update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}"
+        commit_log = "\n".join(
+            f"🔹 `{c['sha'][:7]}` - {c['commit']['message']} ({c['commit']['committer']['date']})"
+            for c in commits
+        )
+        update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}\n\n🔗🧾🧾🧾🧾🧾🧾"
         await message.reply_text(update_message)
     except Exception as e:
         await message.reply_text(f"❌ Error fetching update logs:\n`{e}`")
