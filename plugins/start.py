@@ -12,8 +12,6 @@ from helper.function import get_page_gif, get_page_caption, get_inline_keyboard
 logging.basicConfig(level=logging.INFO, filename="start_callback_errors.log")
 logger = logging.getLogger("StartCallbackHandler")
 
-user_page_numbers = {}
-
 @pbot.on_message(filters.private & filters.command("start"))
 async def start(client, message):
     try:
@@ -28,9 +26,8 @@ async def start(client, message):
 
         if not await db.is_user_exist(user_id):
             await db.add_user(client, message)
-            
-        user_page_numbers.setdefault(user_id, 1)
-        page_number = user_page_numbers[user_id]
+
+        page_number = 1  # Always start from Page 1
 
         if len(message.command) > 1:
             input_token = message.command[1]
@@ -59,6 +56,7 @@ async def start(client, message):
             reply_markup=InlineKeyboardMarkup(inline_keyboard),
             parse_mode=ParseMode.MARKDOWN
         )
+
     except Exception as e:
         logger.error(f"Error in start command: {e}")
 
@@ -67,15 +65,14 @@ async def callback_query(client, callback_query):
     try:
         user_id = callback_query.from_user.id
         data = callback_query.data
-        
-        user_page_numbers.setdefault(user_id, 1)
-        
-        if data == "previous":
-            user_page_numbers[user_id] = max(1, user_page_numbers[user_id] - 1)
-        elif data == "next":
-            user_page_numbers[user_id] = min(MAX_PAGE, user_page_numbers[user_id] + 1)
 
-        page_number = user_page_numbers[user_id]
+        # No storage, so always assume the user starts from page 1
+        page_number = 1
+
+        if data == "previous":
+            page_number = max(1, page_number - 1)
+        elif data == "next":
+            page_number = min(MAX_PAGE, page_number + 1)
 
         user_details = {
             "id": user_id,
@@ -93,10 +90,7 @@ async def callback_query(client, callback_query):
         
         if callback_query.message.caption != caption or callback_query.message.reply_markup != InlineKeyboardMarkup(inline_keyboard):
             await callback_query.message.edit_caption(caption, reply_markup=InlineKeyboardMarkup(inline_keyboard))
-            
-        # Optionally update media
-        # if new_media:
-        #     await callback_query.message.edit_media(new_media)
-    
+
     except Exception as e:
         logger.error(f"Error in callback_query: {e}")
+        
