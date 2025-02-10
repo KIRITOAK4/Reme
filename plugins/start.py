@@ -60,19 +60,21 @@ async def start(client, message):
     except Exception as e:
         logger.error(f"Error in start command: {e}")
 
-@pbot.on_callback_query(filters.regex(r"^(previous|next)$"))
+@pbot.on_callback_query(filters.regex(r"^(previous|next):\d+$"))
 async def callback_query(client, callback_query):
     try:
         user_id = callback_query.from_user.id
-        data = callback_query.data
+        data = callback_query.data.split(":")  # Example: "next:2" or "previous:3"
+        
+        action = data[0]
+        current_page = int(data[1])
 
-        # No storage, so always assume the user starts from page 1
-        page_number = 1
-
-        if data == "previous":
-            page_number = max(1, page_number - 1)
-        elif data == "next":
-            page_number = min(MAX_PAGE, page_number + 1)
+        if action == "previous":
+            new_page = max(1, current_page - 1)
+        elif action == "next":
+            new_page = min(MAX_PAGE, current_page + 1)
+        else:
+            return  # Invalid action
 
         user_details = {
             "id": user_id,
@@ -82,14 +84,15 @@ async def callback_query(client, callback_query):
             "mention": callback_query.from_user.mention,
         }
 
-        caption = get_page_caption(page_number, **user_details)
-        inline_keyboard = get_inline_keyboard(page_number)
-        video_path = get_page_gif(page_number)
+        caption = get_page_caption(new_page, **user_details)
+        inline_keyboard = get_inline_keyboard(new_page)  # Update button with new page number
+        video_path = get_page_gif(new_page)
         media_type = InputMediaVideo if video_path.endswith(".mp4") else InputMediaAnimation
         new_media = media_type(media=video_path, caption=caption)
-        
-        if callback_query.message.caption != caption or callback_query.message.reply_markup != InlineKeyboardMarkup(inline_keyboard):
-            await callback_query.message.edit_caption(caption, reply_markup=InlineKeyboardMarkup(inline_keyboard))
+
+        await callback_query.message.edit_caption(
+            caption, reply_markup=InlineKeyboardMarkup(inline_keyboard)
+        )
 
     except Exception as e:
         logger.error(f"Error in callback_query: {e}")
