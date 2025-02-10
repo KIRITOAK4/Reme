@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 GITHUB_REPO = "KIRITOAK4/Rename"  # Your private repo
-GITHUB_TOKEN = "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"  # Load from environment variables
+GITHUB_TOKEN = "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"  # Load from environment variables
 
 @pbot.on_message(filters.command("update_log"))
 async def send_update(client, message):
