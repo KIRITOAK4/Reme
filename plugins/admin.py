@@ -11,7 +11,7 @@ import subprocess
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-@pbot.on_message(filters.command("update_log")
+@pbot.on_message(filters.command("update_log"))
 async def send_update(client, message):
     try:
         # Run Git command to get latest commit logs (last 5 commits)
