@@ -6,37 +6,9 @@ import os, sys, time, asyncio, logging, datetime
 from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME
 from Krito.txt import Txt
 from datetime import datetime
-import requests
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-GITHUB_REPO = "KIRITOAK4/Rename"  # Your private repo
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "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")  # Securely load from environment
-
-@pbot.on_message(filters.command("update_log"))
-async def send_update(client, message):
-    try:
-        if not GITHUB_TOKEN:
-            await message.reply_text("🚫 GitHub token is missing. Set it in environment variables.")
-            return
-
-        url = f"https://api.github.com/repos/{GITHUB_REPO}/commits?per_page=5"
-        headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            await message.reply_text(f"🚫 Failed to fetch updates from GitHub: {response.json().get('message', 'Unknown error')}")
-            return
-        commits = response.json()
-        commit_log = "\n".join(
-            f"🔹 `{c['sha'][:7]}` - {c['commit']['message']} ({c['commit']['committer']['date']})"
-            for c in commits
-        )
-        update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}\n\n🔗 View Full Changes on GitHub"
-        await message.reply_text(update_message)
-    except Exception as e:
-        await message.reply_text(f"❌ Error fetching update logs:\n`{e}`")
 
 @pbot.on_message(filters.command(["stats", "status"]))
 async def get_stats(bot, message):
