@@ -13,10 +13,10 @@ IST = timezone("Asia/Kolkata")  # Set to Indian Standard Time
 async def validate_user(message, button=None):
     try:
         if not TOKEN_TIMEOUT:
-            return None, button
+            return None, None
         userid = message.from_user.id
         if userid in ADMIN or userid in SP_USERS:
-            return None, button
+            return None, None
         token, expire = await db.get_token_and_time(userid)
         reset_time = get_next_reset_time(TOKEN_TIMEOUT)
         now = datetime.now(IST)
@@ -30,7 +30,7 @@ async def validate_user(message, button=None):
                 button = generate_buttons(new_token)
             error_msg = '⚠️ Your token has expired. Please refresh your token to continue.'
             return error_msg, button
-        return None, button
+        return None, None
     except Exception as e:
         return "An unexpected error occurred while validating the user.", button
 
