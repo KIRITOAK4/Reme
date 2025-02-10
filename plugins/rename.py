@@ -39,7 +39,7 @@ async def rename_start(client, message):
     if await check_user_limit(user_id):
         error_msg, button = await validate_user(message)
         if error_msg:
-            await message.reply_text(error_msg, reply_markup=InlineKeyboardMarkup(button))
+            await message.reply_text(error_msg, reply_markup=InlineKeyboardMarkup(button) if button else None)
             return
 
     file = getattr(message, message.media.value)
