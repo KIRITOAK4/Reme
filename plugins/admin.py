@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 GITHUB_REPO = "KIRITOAK4/Rename"  # Your private repo
-GITHUB_TOKEN = "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"  # Load from environment variables
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "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")  # Securely load from environment
 
 @pbot.on_message(filters.command("update_log"))
 async def send_update(client, message):
@@ -33,7 +33,7 @@ async def send_update(client, message):
             f"🔹 `{c['sha'][:7]}` - {c['commit']['message']} ({c['commit']['committer']['date']})"
             for c in commits
         )
-        update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}\n\n🔗🧾🧾🧾🧾🧾🧾"
+        update_message = f"🆕 **Latest Updates in Repo:**\n\n{commit_log}\n\n🔗 View Full Changes on GitHub"
         await message.reply_text(update_message)
     except Exception as e:
         await message.reply_text(f"❌ Error fetching update logs:\n`{e}`")
