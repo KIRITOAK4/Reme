@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from pytz import timezone
 from pyrogram.types import InlineKeyboardButton
 from helper.database import db
-from Krito import BOT_NAME, ADMIN, TOKEN_TIMEOUT, SP_USERS, TUTORIAL_URL, SHORT_URL
+from Krito import BOT_NAME, ADMIN, TOKEN_TIMEOUT, SP_USERS, TUTORIAL_URL, SHORT_URL, MAX_SPACE
 from shortener import shorten_url
 
 IST = timezone("Asia/Kolkata")  # Set to Indian Standard Time
