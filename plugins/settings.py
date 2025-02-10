@@ -1,14 +1,13 @@
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram import Client, filters
 from Krito import pbot
-from gif import *
+from helper.function import get_page_gif
 from .chatid import base_dir, get_chat_status
 from helper.database import db
 import os, random
 
 # Directory for GIFs
-SETTING = "./gif"
-random_gif = os.path.join(SETTING, random.choice(os.listdir(SETTING)))  # Default settings image
+random_gif = get_page_gif(1)  # Default settings image
 
 def generate_buttons(button_data):
     """Generate InlineKeyboardMarkup from a list of (text, callback_data) tuples."""
