@@ -23,7 +23,7 @@ def get_page_gif(page_number):
 
 def get_page_caption(page_number, first_name, last_name, mention, username, id):
     try:
-        page_text = {0: Text, 1: Text1, 2: Text2, 3: Text3}.get(page_number, Text)
+        page_text = {1: Text, 2: Text1, 3: Text2, 4: Text3}.get(page_number, Text)
         mention = f"[{first_name}](tg://user?id={id})"
         username_text = f"@{username}" if username else ""
         formatted_text = page_text.format(first_name=first_name, last_name=last_name, username=username_text, mention=mention, id=id)
@@ -39,7 +39,7 @@ def get_inline_keyboard(page_number):
         row = []
 
         # Add "previous" button if not on the first page
-        if page_number > 0:
+        if page_number > 1:
             row.append(InlineKeyboardButton("👈", callback_data="previous"))
 
         # Add "next" button if not on the last page
