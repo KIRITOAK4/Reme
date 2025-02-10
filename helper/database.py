@@ -71,20 +71,6 @@ class Database:
             return metadata
         return None
 
-    async def update_metadata_for_old_users(self):
-        async for users in self.col.find({}):
-            user_id = user["_id"]
-            metadata = user.get("metadata")
-            if not metadata:
-                await self.set_metadata(user_id, {
-                    "title": "t.me/devil_testing_bot",
-                    "artist": "t.me/devil_testing_bot",
-                    "audio": "t.me/devil_testing_bot",
-                    "author": "t.me/devil_testing_bot",
-                    "video": "t.me/devil_testing_bot",
-                    "subtitle": "t.me/devil_testing_bot"
-                })
-
     async def set_thumbnail(self, id, file_id):
         await self.col.update_one({"_id": int(id)}, {"$set": {"file_id": file_id}})
 
@@ -194,6 +180,38 @@ class Database:
         if user:
             return user.get("sample_value", 0)  # Default to 0 if not set
         return 0
+
+    async def update_metadata_for_old_users(self):
+        update_fields = {
+            "chat_id": None,
+            "file_id": None,
+            "caption": None,
+            "token": None,
+            "time": None,
+            "exten": None,
+            "template": None,
+            "sample_value": 0,
+            "space_used": 0,
+            "uploadtype": None,
+            "metadata": {
+                "title": "t.me/devil_testing_bot",
+                "artist": "t.me/devil_testing_bot",
+                "audio": "t.me/devil_testing_bot",
+                "author": "t.me/devil_testing_bot",
+                "video": "t.me/devil_testing_bot",
+                "subtitle": "t.me/devil_testing_bot"
+            }
+        }
+
+        async for user in self.col.find({}):
+            user_id = user["_id"]
+            updated_data = {key: user.get(key, value) for key, value in update_fields.items()}
+            if "metadata" in user:
+                updated_metadata = {key: user["metadata"].get(key, value) for key, value in update_fields["metadata"].items()}
+            else:
+                updated_metadata = update_fields["metadata"]
+            updated_data["metadata"] = updated_metadata
+            await self.col.update_one({"_id": user_id}, {"$set": updated_data})
         
 
 db = Database(DB_URL, DB_NAME)
