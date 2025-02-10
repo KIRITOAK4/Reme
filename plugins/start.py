@@ -24,7 +24,7 @@ async def start(client, message):
             await db.add_user(client, message)
             
         if userid not in user_page_numbers:
-            user_page_numbers[userid] = 0  # Initialize page number for the user
+            user_page_numbers[userid] = 1  # Initialize page number for the user
         page_number = user_page_numbers[userid]
         
         input_token = None
@@ -89,7 +89,7 @@ async def callback_query(client, callback_query):
 
         data = callback_query.data
         if data == "previous":
-            user_page_numbers[user_id] = max(0, user_page_numbers[user_id] - 1)
+            user_page_numbers[user_id] = max(1, user_page_numbers[user_id] - 1)
         elif data == "next":
             user_page_numbers[user_id] = min(MAX_PAGE, user_page_numbers[user_id] + 1)
 
