@@ -9,8 +9,6 @@ from helper.database import db
 from Krito import pbot, MAX_PAGE
 from helper.function import get_page_gif, get_page_caption, get_inline_keyboard
 
-page_number = 1  # Always start from Page 1
-
 logging.basicConfig(level=logging.INFO, filename="start_callback_errors.log")
 logger = logging.getLogger("StartCallbackHandler")
 
