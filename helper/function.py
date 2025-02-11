@@ -19,11 +19,11 @@ def get_page_gif():
         logger.error(f"Error in get_page_gif: {e}")
         return None
 
-# Function to format caption text
+# Function to format caption text based on the page number
 def get_page_caption(page_number, first_name, last_name, mention, username, id):
     try:
         text_templates = {1: Text, 2: Text1, 3: Text2, 4: Text3}
-        page_text = text_templates.get(page_number, Text)
+        page_text = text_templates.get(page_number, Text)  # Default to Text if page not found
         mention = f"[{first_name}](tg://user?id={id})"
         username_text = f"@{username}" if username else ""
         return page_text.format(
@@ -33,14 +33,14 @@ def get_page_caption(page_number, first_name, last_name, mention, username, id):
         logger.error(f"Error in get_page_caption: {e}")
         return None
 
-# Function to generate inline keyboard
+# Function to generate inline keyboard navigation buttons
 def get_inline_keyboard(page_number):
     try:
         buttons = []
         if page_number > 1:
-            buttons.append(InlineKeyboardButton("👈", callback_data="previous"))
+            buttons.append(InlineKeyboardButton("👈", callback_data=f"previous:{page_number-1}"))
         if page_number < MAX_PAGE:
-            buttons.append(InlineKeyboardButton("👉", callback_data="next"))
+            buttons.append(InlineKeyboardButton("👉", callback_data=f"next:{page_number+1}"))
         return [buttons] if buttons else []
     except Exception as e:
         logger.error(f"Error in get_inline_keyboard: {e}")
