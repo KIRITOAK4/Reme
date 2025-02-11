@@ -50,7 +50,7 @@ async def start(client, message):
         inline_keyboard = get_inline_keyboard(page_number)
 
         await message.reply_video(
-            video=get_page_gif(page_number),
+            video=get_page_gif(),
             caption=caption,
             supports_streaming=True,
             reply_markup=InlineKeyboardMarkup(inline_keyboard),
