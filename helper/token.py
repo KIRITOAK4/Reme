@@ -83,7 +83,7 @@ async def schedule_daily_reset():
     while True:
         try:
             now = datetime.now(IST)
-            reset_time = now.replace(hour=0, minute=30, second=0, microsecond=0)
+            reset_time = now.replace(hour=0, minute=55, second=0, microsecond=0)
             if now >= reset_time:
                 reset_time += timedelta(days=1)
             wait_time = (reset_time - now).total_seconds()
