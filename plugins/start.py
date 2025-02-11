@@ -86,14 +86,11 @@ async def callback_query(client, callback_query):
 
         caption = get_page_caption(new_page, **user_details)
         inline_keyboard = get_inline_keyboard(new_page)  # Update button with new page number
-        video_path = get_page_gif(new_page)
-        media_type = InputMediaVideo if video_path.endswith(".mp4") else InputMediaAnimation
-        new_media = media_type(media=video_path, caption=caption)
 
         await callback_query.message.edit_caption(
-            caption, reply_markup=InlineKeyboardMarkup(inline_keyboard)
+            caption=caption, 
+            reply_markup=InlineKeyboardMarkup(inline_keyboard)
         )
 
     except Exception as e:
         logger.error(f"Error in callback_query: {e}")
-        
