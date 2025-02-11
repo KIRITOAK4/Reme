@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO, filename="lameda_error.log")
 logger = logging.getLogger("GifHandler")
 
 # Function to get a random GIF from the 'gif' directory
-def get_page_gif(page_number):
+def get_page_gif():
     try:
         gif_files = os.listdir("./gif")
         if not gif_files:
