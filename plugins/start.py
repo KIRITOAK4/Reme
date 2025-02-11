@@ -1,16 +1,18 @@
-import asyncio
 import logging
+import random
+import asyncio
 from time import time
 from uuid import uuid4
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, CallbackQuery, InputMediaVideo, InputMediaAnimation
+from pyrogram.types import InlineKeyboardMarkup, CallbackQuery
 from pyrogram.enums import ParseMode
 from helper.database import db
 from Krito import pbot, MAX_PAGE
 from helper.function import get_page_gif, get_page_caption, get_inline_keyboard
 
-logging.basicConfig(level=logging.INFO, filename="start_callback_errors.log")
-logger = logging.getLogger("StartCallbackHandler")
+# Setup logging
+logging.basicConfig(level=logging.INFO, filename="start_errors.log")
+logger = logging.getLogger("StartHandler")
 
 @pbot.on_message(filters.private & filters.command("start"))
 async def start(client, message):
@@ -24,11 +26,11 @@ async def start(client, message):
             "mention": message.from_user.mention,
         }
 
+        # Check if user exists in the database, else add
         if not await db.is_user_exist(user_id):
             await db.add_user(client, message)
 
-        page_number = 1  # Always start from Page 1
-
+        # Token processing (if provided)
         if len(message.command) > 1:
             input_token = message.command[1]
             stored_token, stored_time = await db.get_token_and_time(user_id)
@@ -46,6 +48,8 @@ async def start(client, message):
             await message.reply_text("Thanks for your support!")
             return
 
+        # Default start message (Page 1)
+        page_number = 1
         caption = get_page_caption(page_number, **user_details)
         inline_keyboard = get_inline_keyboard(page_number)
 
@@ -76,6 +80,7 @@ async def callback_query(client, callback_query):
         else:
             return  # Invalid action
 
+        # Get user details for caption
         user_details = {
             "id": user_id,
             "first_name": callback_query.from_user.first_name,
@@ -84,8 +89,9 @@ async def callback_query(client, callback_query):
             "mention": callback_query.from_user.mention,
         }
 
+        # Update caption and buttons (GIF remains unchanged)
         caption = get_page_caption(new_page, **user_details)
-        inline_keyboard = get_inline_keyboard(new_page)  # Update button with new page number
+        inline_keyboard = get_inline_keyboard(new_page)
 
         await callback_query.message.edit_caption(
             caption=caption, 
@@ -94,3 +100,4 @@ async def callback_query(client, callback_query):
 
     except Exception as e:
         logger.error(f"Error in callback_query: {e}")
+        
