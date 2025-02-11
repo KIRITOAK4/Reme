@@ -38,14 +38,16 @@ async def reset_user_space(client, message):
         command_parts = message.text.split()
         
         if len(command_parts) == 2 and command_parts[1].lower() == "all":
-            all_users = await db.get_all_users()
-            for user in all_users:
+            all_users_cursor = await db.get_all_users()
+            
+            async for user in all_users_cursor:  # ✅ Correct way to iterate cursor
                 user_id = user["_id"]
                 await db.set_space_used(user_id, 0)
                 try:
                     await pbot.send_message(user_id, "Your used space has been reset to 0. Enjoy!")
                 except Exception as e:
                     await message.reply_text(f"❌ Failed to notify user {user_id}. Error: {e}")
+                    
             await message.reply_text("✅ Space usage for all users has been reset to 0.")
         
         elif len(command_parts) == 2:
@@ -68,7 +70,7 @@ async def reset_user_space(client, message):
         await message.reply_text("⚠️ Invalid user ID format. Please provide a valid user ID.")
     except Exception as e:
         await message.reply_text(f"❌ An error occurred while resetting space usage: {e}")
-
+        
 @pbot.on_message(filters.command("update_metadata") & filters.user(ADMIN))
 async def update_metadata_for_old_users_command(client, message):
     try:
