@@ -1,6 +1,5 @@
-import logging
-import random
 import asyncio
+import logging
 from time import time
 from uuid import uuid4
 from pyrogram import Client, filters
@@ -11,8 +10,11 @@ from Krito import pbot, MAX_PAGE
 from helper.function import get_page_gif, get_page_caption, get_inline_keyboard
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, filename="start_errors.log")
-logger = logging.getLogger("StartHandler")
+logging.basicConfig(level=logging.INFO, filename="start_callback_errors.log")
+logger = logging.getLogger("StartCallbackHandler")
+
+# Dictionary to track user pages
+user_pages = {}
 
 @pbot.on_message(filters.private & filters.command("start"))
 async def start(client, message):
@@ -26,11 +28,9 @@ async def start(client, message):
             "mention": message.from_user.mention,
         }
 
-        # Check if user exists in the database, else add
         if not await db.is_user_exist(user_id):
             await db.add_user(client, message)
 
-        # Token processing (if provided)
         if len(message.command) > 1:
             input_token = message.command[1]
             stored_token, stored_time = await db.get_token_and_time(user_id)
@@ -48,8 +48,10 @@ async def start(client, message):
             await message.reply_text("Thanks for your support!")
             return
 
-        # Default start message (Page 1)
-        page_number = 1
+        # Start from page 1
+        user_pages[user_id] = 1
+        page_number = user_pages[user_id]
+
         caption = get_page_caption(page_number, **user_details)
         inline_keyboard = get_inline_keyboard(page_number)
 
@@ -64,23 +66,27 @@ async def start(client, message):
     except Exception as e:
         logger.error(f"Error in start command: {e}")
 
-@pbot.on_callback_query(filters.regex(r"^(previous|next):\d+$"))
+@pbot.on_callback_query(filters.regex(r"^(previous|next)$"))
 async def callback_query(client, callback_query):
     try:
         user_id = callback_query.from_user.id
-        data = callback_query.data.split(":")  # Example: "next:2" or "previous:3"
-        
-        action = data[0]
-        current_page = int(data[1])
 
-        if action == "previous":
+        # Ensure user has a page number, default to 1
+        if user_id not in user_pages:
+            user_pages[user_id] = 1
+
+        current_page = user_pages[user_id]
+
+        if callback_query.data == "previous":
             new_page = max(1, current_page - 1)
-        elif action == "next":
+        elif callback_query.data == "next":
             new_page = min(MAX_PAGE, current_page + 1)
         else:
             return  # Invalid action
 
-        # Get user details for caption
+        # Update user’s page number
+        user_pages[user_id] = new_page
+
         user_details = {
             "id": user_id,
             "first_name": callback_query.from_user.first_name,
@@ -89,12 +95,11 @@ async def callback_query(client, callback_query):
             "mention": callback_query.from_user.mention,
         }
 
-        # Update caption and buttons (GIF remains unchanged)
         caption = get_page_caption(new_page, **user_details)
         inline_keyboard = get_inline_keyboard(new_page)
 
         await callback_query.message.edit_caption(
-            caption=caption, 
+            caption=caption,
             reply_markup=InlineKeyboardMarkup(inline_keyboard)
         )
 
