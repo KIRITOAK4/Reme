@@ -24,7 +24,7 @@ async def main():
         uptime = BOT_UPTIME
         logger.info(f"{me.first_name} Is Started.....✨️")
         asyncio.create_task(schedule_daily_reset())
-        
+
         if WEBHOOK:
             app = web.AppRunner(await web_server())
             await app.setup()
@@ -49,6 +49,4 @@ async def main():
         logger.error(f"An error occurred in main(): {main_error}")
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    loop.run_forever()
+    asyncio.run(main())  # No need for loop.run_forever()
