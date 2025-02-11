@@ -7,7 +7,7 @@ from helper.database import db
 import os, random
 
 # Directory for GIFs
-random_gif = get_page_gif(1)  # Default settings image
+random_gif = get_page_gif()  # Default settings image
 
 def generate_buttons(button_data):
     """Generate InlineKeyboardMarkup from a list of (text, callback_data) tuples."""
