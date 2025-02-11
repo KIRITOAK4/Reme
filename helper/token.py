@@ -79,17 +79,15 @@ async def reset_space_usage():
         await db.set_space_used(user_id, 0)
     
 async def schedule_daily_reset():
+    """Runs a daily reset at 00:00 IST."""
     while True:
-        now = datetime.now(timezone("Asia/Kolkata"))
-        reset_time = now.replace(hour=0, minute=00, second=0, microsecond=0)
-        if now >= reset_time:
-            reset_time += timedelta(days=1)
-        wait_time = (reset_time - now).total_seconds()
-        await asyncio.sleep(wait_time)
         try:
-            print("Starting daily reset of space usage...")
+            now = datetime.now(IST)
+            reset_time = now.replace(hour=0, minute=45, second=0, microsecond=0)
+            if now >= reset_time:
+                reset_time += timedelta(days=1)
+            wait_time = (reset_time - now).total_seconds()
+            await asyncio.sleep(wait_time)
             await reset_space_usage()
-            print("Daily reset of space usage completed successfully.")
         except Exception as e:
-            print(f"An error occurred during the daily reset: {e}")
-        
+            print(f"❌ Error in schedule_daily_reset: {e}")
