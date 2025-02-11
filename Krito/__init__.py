@@ -34,7 +34,7 @@ SP_USERS = [int(sp_users) if id_pattern.search(sp_users) else sp_users for sp_us
 MAX_SPACE = int(os.environ.get("MAX_SPACE", 104857600))
 #Use only in 24 hr 
 TOKEN_TIMEOUT = os.environ.get("TOKEN_TIMEOUT", "None")
-MAX_PAGE = os.environ.get("MAX_PAGE", 3)
+MAX_PAGE = os.environ.get("MAX_PAGE", 4)
 
 # -------------------------------URLS AND SHORTENER------------------------
 TUTORIAL_URL = os.environ.get("TUTORIAL_URL", "")
@@ -49,11 +49,8 @@ Text = Txt.TEXT
 
 #--------------------------------Text1-------------------------
 
-Text1 = os.environ.get("Text1", """☞☞☞ ☞☞ 𝐻𝐸𝐿𝑃 𝑃𝐴𝐺𝐸 ☚☚ ☚☚
+Text1 = Txt.TEXT_MESSAGE1
 
-☞ ┃⚙️ /settings - 𝗧ᴏ 𝗦ᴇᴛ, 𝗗𝗲𝗹𝗲𝘁𝗲 𝗬𝗼𝘂𝗿 𝗦𝗲𝘁𝘁𝗶𝗻𝗴𝘀.
-☞ ┃🗂 /editmedia - ᴇᴅɪᴛ ʏᴏᴜʀ ᴍᴇᴅɪᴀ ꜰɪʟᴇ ᴡɪᴛʜᴏᴜᴛ ᴅᴇʟᴇᴛɪɴɢ.
-☞ ┃⌨ /set_chatid - 𝐒𝐞𝐭 𝐂𝐡𝐚𝐭𝐈𝐝 𝐎𝐧𝐥𝐲 𝐟𝐨𝐫 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 𝐚𝐧𝐝 𝐚𝐝𝐝 𝐦𝐞 𝐚𝐬 𝐚𝐝𝐦𝐢𝐧 𝐚𝐬 𝐠𝐢𝐯𝐞𝐧 𝐂𝐡𝐚𝐭𝐈𝐝.""")
 #-----------------------------Text2-------------------------
 
 Text2 = Txt.TEXT_MESSAGE2
