@@ -1,6 +1,10 @@
 import motor.motor_asyncio
 from Krito import DB_URL, DB_NAME
 from .utils import send_log
+from datetime import datetime
+from pytz import timezone
+
+IST = timezone("Asia/Kolkata")  # Indian Standard Time
 
 class Database:
     def __init__(self, uri, database_name):
@@ -20,6 +24,7 @@ class Database:
             template=None,
             sample_value=0,
             space_used=0,
+            filled_at=None,
             uploadtype=None,
             metadata={
                 "title": "t.me/devil_testing_bot",
@@ -48,7 +53,7 @@ class Database:
         return count
 
     async def get_all_users(self):
-        all_users = self.col.find({})
+        all_users = self.col.find({})  # Kept as per your request
         return all_users
 
     async def delete_user(self, user_id):
@@ -132,50 +137,50 @@ class Database:
         user = await self.db.users.find_one({"_id": int(id)})
         if user:
             return user.get("token", None), user.get("time", None)
-            return None, None
-        
+        return None, None  # Fixed return issue
+
     async def remove_time_field(self, id):
         await self.col.update_one({"_id": int(id)}, {"$unset": {"time": ""}})
 
     async def set_space_used(self, id, space_used):
-        """
-        Set the amount of space used by a user.
-        :param id: User ID
-        :param space_used: Space used in bytes
-        """
+        """Set the space used by a user and track when they exceed their limit."""
         await self.col.update_one(
             {"_id": int(id)},
             {"$set": {"space_used": space_used}}
         )
 
+        if space_used > MAX_SPACE:
+            existing_filled_time = await self.get_filled_time(id)
+            if existing_filled_time is None:  # Store timestamp only if not already set
+                await self.set_filled_time(id, datetime.now(IST).isoformat())
+
     async def get_space_used(self, id):
-        """
-        Get the amount of space used by a user.
-        :param id: User ID
-        :return: Space used in bytes (default: 0)
-        """
+        """Get the space used by a user (default: 0)."""
         user = await self.col.find_one({"_id": int(id)})
-        if user:
-            return user.get("space_used", 0)  # Default to 0 if not set
-        return 0
+        return user.get("space_used", 0) if user else 0
+
+    async def set_filled_time(self, user_id, timestamp):
+        """Set the timestamp when a user first exceeds their space limit."""
+        await self.col.update_one({"_id": user_id}, {"$set": {"filled_at": timestamp}}, upsert=True)
+
+    async def get_filled_time(self, user_id):
+        """Retrieve the timestamp of when the user first exceeded space limit."""
+        user = await self.col.find_one({"_id": user_id})
+        return user.get("filled_at") if user else None
+
+    async def reset_filled_time(self, user_id):
+        """Reset the filled_at field when the user's space is reset."""
+        await self.col.update_one({"_id": user_id}, {"$unset": {"filled_at": ""}})
 
     async def set_sample_value(self, id, value):
-        """
-        Set the sample button value for a user.
-        :param id: User ID
-        :param value: New sample value
-        """
+        """Set the sample button value for a user."""
         await self.col.update_one(
             {"_id": int(id)},
             {"$set": {"sample_value": value}}
         )
 
     async def get_sample_value(self, id):
-        """
-        Get the sample button value for a user.
-        :param id: User ID
-        :return: Sample value (default: 0)
-        """
+        """Get the sample button value for a user."""
         user = await self.col.find_one({"_id": int(id)})
         if user:
             return user.get("sample_value", 0)  # Default to 0 if not set
@@ -192,6 +197,7 @@ class Database:
             "template": None,
             "sample_value": 0,
             "space_used": 0,
+            "filled_at": None,
             "uploadtype": None,
             "metadata": {
                 "title": "t.me/devil_testing_bot",
@@ -212,6 +218,6 @@ class Database:
                 updated_metadata = update_fields["metadata"]
             updated_data["metadata"] = updated_metadata
             await self.col.update_one({"_id": user_id}, {"$set": updated_data})
-        
 
 db = Database(DB_URL, DB_NAME)
+                
