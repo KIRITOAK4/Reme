@@ -12,7 +12,6 @@ IST = timezone("Asia/Kolkata")  # Set to Indian Standard Time
 
 async def validate_user(message, button=None):
     try:
-        # Check if TOKEN_TIMEOUT is "None" (as a string) or an empty string
         if TOKEN_TIMEOUT in ["None", ""]:
             return None, None
 
@@ -48,7 +47,6 @@ def get_next_reset_time(token_timeout):
     try:
         hour, minute = map(int, token_timeout.split(":"))
         reset_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        # If the reset time has already passed today, set it for tomorrow
         if now >= reset_time:
             reset_time += timedelta(days=1)
         return reset_time
@@ -65,29 +63,21 @@ def generate_buttons(new_token):
         InlineKeyboardButton(text='🔄 Refresh Token', url=shorten_url(f'https://telegram.me/{BOT_NAME}?start={new_token}')),
     ])
     return buttons  
-    
-async def check_user_limit(user_id):
-    current_space_used = await db.get_space_used(user_id)
-    if current_space_used > MAX_SPACE:
-        return True 
-    return False
 
-async def reset_space_usage():
-    all_users = await db.get_all_users()
-    for user in all_users:
-        user_id = user["_id"]
-        await db.set_space_used(user_id, 0)
-    
-async def schedule_daily_reset():
-    """Runs a daily reset at 00:00 IST."""
-    while True:
-        try:
-            now = datetime.now(IST)
-            reset_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            if now >= reset_time:
-                reset_time += timedelta(days=1)
-            wait_time = (reset_time - now).total_seconds()
-            await asyncio.sleep(wait_time)
-            await reset_space_usage()
-        except Exception as e:
-            print(f"❌ Error in schedule_daily_reset: {e}")
+async def check_user_limit(user_id):
+    """Check if user exceeded space limit and reset if a new day has started."""
+    now = datetime.now(IST)
+    current_space_used = await db.get_space_used(user_id)
+    filled_at = await db.get_filled_time(user_id)  # Retrieve when space was first exceeded
+
+    if current_space_used > MAX_SPACE:
+        if filled_at:
+            filled_time = datetime.fromisoformat(filled_at).astimezone(IST)
+            if filled_time.date() < now.date():  # If the last stored date is before today
+                await db.set_space_used(user_id, 0)  # Reset usage
+                await db.reset_filled_time(user_id)  # Clear timestamp
+                return False  # Allow new uploads
+        else:
+            await db.set_filled_time(user_id, now.isoformat())  # Set time of limit breach
+        return True  # Deny upload if same day
+    return False  # Allow upload if under limit
