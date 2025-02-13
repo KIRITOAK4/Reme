@@ -7,7 +7,6 @@ from route import web_server
 from pyrogram.raw.all import layer
 from pyrogram import __version__
 from Krito import pbot, ubot, WEBHOOK, ADMIN, LOG_CHANNEL, BOT_UPTIME
-from helper.token import schedule_daily_reset
 
 logging.basicConfig(format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,7 +22,6 @@ async def main():
         pbot.username = me.username
         uptime = BOT_UPTIME
         logger.info(f"{me.first_name} Is Started.....✨️")
-        asyncio.create_task(schedule_daily_reset())
         
         if WEBHOOK:
             app = web.AppRunner(await web_server())
