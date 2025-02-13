@@ -1,6 +1,7 @@
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram import Client, filters
 from Krito import pbot
+from helper.utils import humanbytes
 from helper.function import get_page_gif
 from .chatid import base_dir, get_chat_status
 from helper.database import db
@@ -35,6 +36,7 @@ async def settings_menu(client, message):
     metadata_status = "False" if all(value == "t.me/devil_testing_bot" for value in metadata.values()) else "True"
     set_cap = await db.get_caption(user_id)
     used_space = await db.get_space_used(user_id)
+    spaceup = humanbytes(used_space)
     
     caption = f"""
 ➖➖➖➖➖➖➖➖➖➖➖➖
@@ -46,7 +48,7 @@ async def settings_menu(client, message):
 ┃**--📮Chat ID--**: {chat_id} {"✅" if verified else "❌"}
 ┃**--🏡Thumbnail--**: {"✅ Set" if thumbnail else "❌ Not Set"}
 ┃**--🛠Metadata--**: {"✅ Enabled" if metadata_status == "True" else "❌ Disabled"}
-┃**--🌓Space Used--**: {used_space}
+┃**--🌓Space Used--**: {spaceup}
 ➖➖➖➖➖➖➖➖➖➖➖➖
 """
 
@@ -78,6 +80,7 @@ async def settings_menu_callback(client, callback_query):
     metadata_status = "False" if all(value == "t.me/devil_testing_bot" for value in metadata.values()) else "True"
     set_cap = await db.get_caption(user_id)
     used_space = await db.get_space_used(user_id)
+    spaceup = humanbytes(used_space)
     
     caption = f"""
 ➖➖➖➖➖➖➖➖➖➖➖➖
@@ -89,7 +92,7 @@ async def settings_menu_callback(client, callback_query):
 ┃**--📮Chat ID--**: {chat_id} {"✅ Verified" if verified else "❌ Not Verified"}
 ┃**--🏡Thumbnail--**: {"✅ Set" if thumbnail else "❌ Not Set"}
 ┃**--🛠Metadata--**: {"✅ Enabled" if metadata_status == "True" else "❌ Disabled"}
-┃**--🌓Space Used--**: {used_space}
+┃**--🌓Space Used--**: {spaceup}
 ➖➖➖➖➖➖➖➖➖➖➖➖
 """
 
