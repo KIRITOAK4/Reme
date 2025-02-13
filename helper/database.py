@@ -1,5 +1,5 @@
 import motor.motor_asyncio
-from Krito import DB_URL, DB_NAME
+from Krito import DB_URL, DB_NAME, MAX_SPACE
 from .utils import send_log
 from datetime import datetime
 from pytz import timezone
