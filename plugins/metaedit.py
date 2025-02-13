@@ -209,7 +209,7 @@ async def process_rename(client: Client, original_message: Message, new_name: st
 
             if upload_client == ubot:
                 await pbot.copy_message(
-                    chat_id=chat_id if chat_id and verified else message.chat.id,
+                    chat_id=chat_id if chat_id and verified else original_message.chat.id,
                     from_chat_id=suc.chat.id,
                     message_id=suc.message_id
                 )
