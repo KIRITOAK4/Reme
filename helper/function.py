@@ -36,13 +36,15 @@ def get_page_caption(page_number, first_name, last_name, mention, username, id):
 # Function to generate inline keyboard
 def get_inline_keyboard(page_number):
     try:
-        buttons = []
+        inline_keyboard = []
+        row = []
         if page_number > 1:
-            buttons.append(InlineKeyboardButton("👈", callback_data="previous"))
+            row.append(InlineKeyboardButton("👈", callback_data="previous"))
         if page_number < MAX_PAGE:
-            buttons.append(InlineKeyboardButton("👉", callback_data="next"))
-        return [buttons] if buttons else []
+            row.append(InlineKeyboardButton("👉", callback_data="next"))
+        inline_keyboard.append(row)
+        return inline_keyboard
     except Exception as e:
-        logger.error(f"Error in get_inline_keyboard: {e}")
+        logger.error(f"An error occurred in get_inline_keyboard: {e}")
         return None
-        
+    
