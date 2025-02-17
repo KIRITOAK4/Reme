@@ -19,9 +19,7 @@ user_pages = {}
 @pbot.on_message(filters.private & filters.command("start"))
 async def start(client, message):
     try:
-        print("/start command received")  # Debug
         user_id = message.from_user.id
-        print(f"User ID: {user_id}")  # Debug
 
         user_details = {
             "id": user_id,
@@ -30,21 +28,15 @@ async def start(client, message):
             "username": message.from_user.username,
             "mention": message.from_user.mention,
         }
-        print(f"User Details: {user_details}")  # Debug
 
         if not await db.is_user_exist(user_id):
-            print("User does not exist, adding to database.")  # Debug
             await db.add_user(client, message)
-        else:
-            print("User already exists in database.")  # Debug
 
         if len(message.command) > 1:
             input_token = message.command[1]
             stored_token, stored_time = await db.get_token_and_time(user_id)
-            print(f"Received Token: {input_token}, Stored Token: {stored_token}")  # Debug
 
             if stored_token != input_token:
-                print("Invalid token, sending error message.")  # Debug
                 await message.reply_video(
                     video="https://graph.org/file/f6e6beb62a16a46642fb4.mp4",
                     caption="**Token is either used or invalid.**",
@@ -52,7 +44,6 @@ async def start(client, message):
                 )
                 return
             
-            print("Valid token, updating token and time.")  # Debug
             await db.set_token(user_id, str(uuid4()))
             await db.set_time(user_id, time())
             await message.reply_text("Thanks for your support!")
@@ -61,12 +52,9 @@ async def start(client, message):
         # Start from page 1
         user_pages[user_id] = 1
         page_number = 1
-        print(f"Starting user {user_id} at page {page_number}")  # Debug
 
         caption = get_page_caption(page_number, **user_details)
-        print(f"caption problem: {caption}")
         inline_keyboard = get_inline_keyboard(page_number)
-        print(f"inline problem: {inline_keyboard}")
 
         await message.reply_video(
             video=get_page_gif(),
@@ -90,17 +78,17 @@ async def callback_query(client, callback_query):
         print(f"Current Page: {current_page}")  # Debug
 
         if callback_query.data == "previous":
-            page_number = max(1, current_page - 1)
-            print(f"Navigating to previous page: {new_page}")  # Debug
+            page_number = max(1, current_page - 1)  # Update page_number
+            print(f"Navigating to previous page: {page_number}")  # Debug
         elif callback_query.data == "next":
-            page_number = min(MAX_PAGE, current_page + 1)
-            print(f"Navigating to next page: {new_page}")  # Debug
+            page_number = min(MAX_PAGE, current_page + 1)  # Update page_number
+            print(f"Navigating to next page: {page_number}")  # Debug
         else:
             print("Invalid callback data received")  # Debug
             return
 
-        user_pages[user_id] = page_number
-        print(f"Updated user {user_id} to page {new_page}")  # Debug
+        user_pages[user_id] = page_number  # Update user page to new page number
+        print(f"Updated user {user_id} to page {page_number}")  # Debug
 
         user_details = {
             "id": user_id,
@@ -111,9 +99,9 @@ async def callback_query(client, callback_query):
         }
         print(f"User Details: {user_details}")  # Debug
 
-        caption = get_page_caption(page_number, **user_details)
+        caption = get_page_caption(page_number, **user_details)  # Use page_number
         print(f"caption problem: {caption}")
-        inline_keyboard = get_inline_keyboard(page_number)
+        inline_keyboard = get_inline_keyboard(page_number)  # Use page_number
         print(f"inline problem: {inline_keyboard}")
 
         await callback_query.message.edit_caption(
