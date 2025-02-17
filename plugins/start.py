@@ -50,7 +50,7 @@ async def start(client, message):
 
         # Start from page 1
         user_pages[user_id] = 1
-        page_number = user_pages[user_id]
+        page_number = 1
 
         caption = get_page_caption(page_number, **user_details)
         inline_keyboard = get_inline_keyboard(page_number)
@@ -70,11 +70,6 @@ async def start(client, message):
 async def callback_query(client, callback_query):
     try:
         user_id = callback_query.from_user.id
-
-        # Ensure user has a page number, default to 1
-        if user_id not in user_pages:
-            user_pages[user_id] = 1
-
         current_page = user_pages[user_id]
 
         if callback_query.data == "previous":
