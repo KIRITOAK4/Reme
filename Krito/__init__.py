@@ -34,7 +34,7 @@ SP_USERS = [int(sp_users) if id_pattern.search(sp_users) else sp_users for sp_us
 MAX_SPACE = int(os.environ.get("MAX_SPACE", 104857600))
 #Use only in 24 hr 
 TOKEN_TIMEOUT = os.environ.get("TOKEN_TIMEOUT", "None")
-MAX_PAGE = os.environ.get("MAX_PAGE", 4)
+MAX_PAGE = int(os.environ.get("MAX_PAGE", 4))
 
 # -------------------------------URLS AND SHORTENER------------------------
 TUTORIAL_URL = os.environ.get("TUTORIAL_URL", "")
