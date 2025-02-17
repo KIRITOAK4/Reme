@@ -110,7 +110,9 @@ async def callback_query(client, callback_query):
         print(f"User Details: {user_details}")  # Debug
 
         caption = get_page_caption(new_page, **user_details)
+        print(f"caption problem: {caption}")
         inline_keyboard = get_inline_keyboard(new_page)
+        print(f"inline problem: {inline_keyboard}")
 
         await callback_query.message.edit_caption(
             caption=caption,
