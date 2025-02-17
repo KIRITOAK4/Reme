@@ -74,7 +74,7 @@ async def callback_query(client, callback_query):
         user_id = callback_query.from_user.id
         print(f"User ID: {user_id}")  # Debug
 
-        current_page = user_pages.get(user_id, 1)
+        current_page = int(user_pages.get(user_id, 1))
         print(f"Current Page: {current_page}")  # Debug
 
         if callback_query.data == "previous":
