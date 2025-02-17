@@ -63,9 +63,9 @@ async def start(client, message):
         page_number = 1
         print(f"Starting user {user_id} at page {page_number}")  # Debug
 
-        caption = get_page_caption(new_page, **user_details)
+        caption = get_page_caption(page_number, **user_details)
         print(f"caption problem: {caption}")
-        inline_keyboard = get_inline_keyboard(new_page)
+        inline_keyboard = get_inline_keyboard(page_number)
         print(f"inline problem: {inline_keyboard}")
 
         await message.reply_video(
@@ -90,16 +90,16 @@ async def callback_query(client, callback_query):
         print(f"Current Page: {current_page}")  # Debug
 
         if callback_query.data == "previous":
-            new_page = max(1, current_page - 1)
+            page_number = max(1, current_page - 1)
             print(f"Navigating to previous page: {new_page}")  # Debug
         elif callback_query.data == "next":
-            new_page = min(MAX_PAGE, current_page + 1)
+            page_number = min(MAX_PAGE, current_page + 1)
             print(f"Navigating to next page: {new_page}")  # Debug
         else:
             print("Invalid callback data received")  # Debug
             return
 
-        user_pages[user_id] = new_page
+        user_pages[user_id] = page_number
         print(f"Updated user {user_id} to page {new_page}")  # Debug
 
         user_details = {
@@ -111,9 +111,9 @@ async def callback_query(client, callback_query):
         }
         print(f"User Details: {user_details}")  # Debug
 
-        caption = get_page_caption(new_page, **user_details)
+        caption = get_page_caption(page_number, **user_details)
         print(f"caption problem: {caption}")
-        inline_keyboard = get_inline_keyboard(new_page)
+        inline_keyboard = get_inline_keyboard(page_number)
         print(f"inline problem: {inline_keyboard}")
 
         await callback_query.message.edit_caption(
