@@ -63,8 +63,10 @@ async def start(client, message):
         page_number = 1
         print(f"Starting user {user_id} at page {page_number}")  # Debug
 
-        caption = get_page_caption(page_number, **user_details)
-        inline_keyboard = get_inline_keyboard(page_number)
+        caption = get_page_caption(new_page, **user_details)
+        print(f"caption problem: {caption}")
+        inline_keyboard = get_inline_keyboard(new_page)
+        print(f"inline problem: {inline_keyboard}")
 
         await message.reply_video(
             video=get_page_gif(),
