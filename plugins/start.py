@@ -9,11 +9,9 @@ from helper.database import db
 from Krito import pbot, MAX_PAGE
 from helper.function import get_page_gif, get_page_caption, get_inline_keyboard
 
-# Setup logging
 logging.basicConfig(level=logging.INFO, filename="start_callback_errors.log")
 logger = logging.getLogger("StartCallbackHandler")
 
-# Dictionary to track user pages
 user_pages = {}
 
 @pbot.on_message(filters.private & filters.command("start"))
@@ -49,7 +47,6 @@ async def start(client, message):
             await message.reply_text("Thanks for your support!")
             return
 
-        # Start from page 1
         user_pages[user_id] = 1
         page_number = 1
 
@@ -65,30 +62,21 @@ async def start(client, message):
         )
     except Exception as e:
         logger.error(f"Error in start command: {e}")
-        print(f"Error in start command: {e}")  # Debug
 
 @pbot.on_callback_query(filters.regex(r"^(previous|next)$"))
 async def callback_query(client, callback_query):
     try:
-        print("Callback query received")  # Debug
         user_id = callback_query.from_user.id
-        print(f"User ID: {user_id}")  # Debug
-
         current_page = int(user_pages.get(user_id, 1))
-        print(f"Current Page: {current_page}")  # Debug
 
         if callback_query.data == "previous":
-            page_number = max(1, current_page - 1)  # Update page_number
-            print(f"Navigating to previous page: {page_number}")  # Debug
+            page_number = max(1, current_page - 1)
         elif callback_query.data == "next":
-            page_number = min(MAX_PAGE, current_page + 1)  # Update page_number
-            print(f"Navigating to next page: {page_number}")  # Debug
+            page_number = min(MAX_PAGE, current_page + 1)
         else:
-            print("Invalid callback data received")  # Debug
             return
 
-        user_pages[user_id] = page_number  # Update user page to new page number
-        print(f"Updated user {user_id} to page {page_number}")  # Debug
+        user_pages[user_id] = page_number
 
         user_details = {
             "id": user_id,
@@ -97,12 +85,9 @@ async def callback_query(client, callback_query):
             "username": callback_query.from_user.username,
             "mention": callback_query.from_user.mention,
         }
-        print(f"User Details: {user_details}")  # Debug
 
-        caption = get_page_caption(page_number, **user_details)  # Use page_number
-        print(f"caption problem: {caption}")
-        inline_keyboard = get_inline_keyboard(page_number)  # Use page_number
-        print(f"inline problem: {inline_keyboard}")
+        caption = get_page_caption(page_number, **user_details)
+        inline_keyboard = get_inline_keyboard(page_number)
 
         await callback_query.message.edit_caption(
             caption=caption,
@@ -110,4 +95,3 @@ async def callback_query(client, callback_query):
         )
     except Exception as e:
         logger.error(f"Error in callback_query: {e}")
-        print(f"Error in callback_query: {e}")  # Debug
