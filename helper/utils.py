@@ -80,3 +80,11 @@ async def send_log(b, u):
             LOG_CHANNEL,
             f"**--Nᴇᴡ Uꜱᴇʀ Sᴛᴀʀᴛᴇᴅ Tʜᴇ Bᴏᴛ--**\n\nUꜱᴇʀ: {u.mention}\nIᴅ: `{u.id}`\nUɴ: @{u.username}\n\nDᴀᴛᴇ: {date}\nTɪᴍᴇ: {time}\n\nBy: {b.mention}"
         )
+
+async def split_and_send_message(message, text):
+    """Splits a long message into chunks and sends them separately."""
+    chunk_size = 4000  # Keep buffer for safety
+    chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+    
+    for chunk in chunks:
+        await message.reply(chunk)
