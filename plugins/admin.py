@@ -5,7 +5,7 @@ from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, Peer
 import os, sys, time, asyncio, logging, datetime
 from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME
 from Krito.txt import Txt
-from helper.utils import humanbytes
+from helper.utils import humanbytes, split_and_send_message
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ async def get_stats(bot, message):
     time_taken_s = (end_t - start_t) * 1000
     await st.edit(text=f"**--Bᴏᴛ Sᴛᴀᴛᴜꜱ--** \n\n**⌚️ Bᴏᴛ Uᴩᴛɪᴍᴇ:** {uptime} \n**🐌 Cᴜʀʀᴇɴᴛ Pɪɴɢ:** `{time_taken_s:.3f} ᴍꜱ` \n**👭 Tᴏᴛᴀʟ Uꜱᴇʀꜱ:** `{total_users}`")
 
-@pbot.on_message(filters.command("fetch_users") & filters.user(ADMIN))  # Replace ADMIN_ID with actual admin ID
+@Client.on_message(filters.command("fetch_users") & filters.user(ADMIN))
 async def fetch_users(client, message):
     users = await db.get_all_users()
     total_space = 0
@@ -34,16 +34,18 @@ async def fetch_users(client, message):
     async for user in users:
         user_id = user["_id"]
         space_used = user.get("space_used", 0)
-        total_space += space_used
-        user_data.append(f"User: {user_id}, Space Used: {humanbytes(space_used)}")
+
+        if space_used > 0:
+            total_space += space_used
+            user_data.append(f"User: {user_id}, Space Used: {humanbytes(space_used)}")
 
     if user_data:
         user_data.append(f"\nTotal Space Used: {humanbytes(total_space)}")
         response = "\n".join(user_data)
     else:
-        response = "No users found in the database."
+        response = "No users have used storage."
 
-    await message.reply(response)
+    await split_and_send_message(message, response)
 
 @pbot.on_message(filters.private & filters.command("restart"))
 async def restart_bot(b, m):
