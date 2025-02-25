@@ -25,7 +25,7 @@ async def get_stats(bot, message):
     time_taken_s = (end_t - start_t) * 1000
     await st.edit(text=f"**--Bᴏᴛ Sᴛᴀᴛᴜꜱ--** \n\n**⌚️ Bᴏᴛ Uᴩᴛɪᴍᴇ:** {uptime} \n**🐌 Cᴜʀʀᴇɴᴛ Pɪɴɢ:** `{time_taken_s:.3f} ᴍꜱ` \n**👭 Tᴏᴛᴀʟ Uꜱᴇʀꜱ:** `{total_users}`")
 
-@Client.on_message(filters.command("fetch_users") & filters.user(ADMIN))
+@pbot.on_message(filters.command("fetch_users") & filters.user(ADMIN))
 async def fetch_users(client, message):
     users = await db.get_all_users()
     total_space = 0
