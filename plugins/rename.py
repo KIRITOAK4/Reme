@@ -16,21 +16,22 @@ from .chatid import get_chat_status
 from .metaedit import process_rename, change_metadata, generate_sample
 from Krito import ubot, pbot, USER_CHAT
 
-
 async def extract_season_episode(filename):
-    """Extracts season and episode numbers from the filename."""
+    """Extracts season and episode numbers from the filename, supporting variations like 'ep', 'Ep', 'episode', 'Episode'."""
     season, episode = None, None
-    match = re.search(r"(?:[Ss]eason|\b[Ss]\b)[\s._-]*(\d+)[\s._-]*(?:[Ee]pisode|\b[Ee]\b)[\s._-]*(\d+)", filename, re.IGNORECASE)
+    match = re.search(r"(?:[Ss]eason|\b[Ss]\b)[\s._-]*(\d+)[\s._-]*(?:[Ee]pisode|\b[Ee]\b|\b[Ee]p\b)[\s._-]*(\d+)", filename, re.IGNORECASE)
     if match:
         season, episode = match.groups()
-    elif match := re.search(r"(?:[Ss]eason|\b[Ss]\b)[\s._-]*(\d+)", filename, re.IGNORECASE):
-        season = match.group(1)
-    elif match := re.search(r"(?:[Ee]pisode|\b[Ee]\b)[\s._-]*(\d+)", filename, re.IGNORECASE):
-        episode = match.group(1)
+    else:
+        match = re.search(r"(?:[Ss]eason|\b[Ss]\b)[\s._-]*(\d+)", filename, re.IGNORECASE)
+        if match:
+            season = match.group(1)
+        match = re.search(r"(?:[Ee]pisode|\b[Ee]\b|\b[Ee]p\b)[\s._-]*(\d+)", filename, re.IGNORECASE)
+        if match:
+            episode = match.group(1)
 
     base_name = os.path.splitext(filename)[0]
     return season, episode, base_name
-
 
 @pbot.on_message(filters.private & (filters.document | filters.audio | filters.video))
 async def rename_start(client, message):
