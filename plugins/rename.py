@@ -16,9 +16,6 @@ from .chatid import get_chat_status
 from .metaedit import process_rename, change_metadata, generate_sample
 from Krito import ubot, pbot, USER_CHAT
 
-import re
-import os
-
 async def extract_season_episode(filename):
     """Extracts season and episode numbers from the filename and removes them from the base name."""
     season, episode = None, None
