@@ -16,33 +16,35 @@ from .chatid import get_chat_status
 from .metaedit import process_rename, change_metadata, generate_sample
 from Krito import ubot, pbot, USER_CHAT
 
+
 async def extract_season_episode(filename):
     """Extracts season and episode numbers from the filename and removes them from the base name."""
     season, episode = None, None
-    cleaned_filename = filename  # Keep a copy for modifications
 
-    # Match: S01 EP09, S1 E9, S01E09, S01-EP09, etc.
-    match = re.search(r"(?:[Ss]eason|\b[Ss]\b)?[\s._-]*(\d+)[\s._-]*(?:[Ee]pisode|\b[Ee]\b)?[\s._-]*(\d+)", filename, re.IGNORECASE)
+    # Improved regex to correctly capture season and episode
+    match = re.search(r"[Ss]?(?:eason)?\s*(\d+)[\s._-]*[Ee]?(?:pisode)?\s*(\d+)", filename, re.IGNORECASE)
     if match:
         season, episode = match.groups()
         cleaned_filename = re.sub(re.escape(match.group(0)), "", filename).strip()
     else:
-        # Only Season
-        match = re.search(r"(?:[Ss]eason|\b[Ss]\b)?[\s._-]*(\d+)", filename, re.IGNORECASE)
+        # Try to match season only
+        match = re.search(r"[Ss]?(?:eason)?\s*(\d+)", filename, re.IGNORECASE)
         if match:
             season = match.group(1)
             cleaned_filename = re.sub(re.escape(match.group(0)), "", filename).strip()
 
-        # Only Episode
-        match = re.search(r"(?:[Ee]pisode|\b[Ee]\b)?[\s._-]*(\d+)", filename, re.IGNORECASE)
+        # Try to match episode only
+        match = re.search(r"[Ee]?(?:pisode)?\s*(\d+)", filename, re.IGNORECASE)
         if match:
             episode = match.group(1)
-            cleaned_filename = re.sub(re.escape(match.group(0)), "", cleaned_filename).strip()
+            cleaned_filename = re.sub(re.escape(match.group(0)), "", filename).strip()
 
-    # Remove any trailing spaces, underscores, or dashes left after removal
+    # Ensure cleaned filename is properly formatted
     cleaned_filename = re.sub(r"[\s._-]+$", "", cleaned_filename).strip()
 
+    # Extract base name without extension
     base_name, _ = os.path.splitext(cleaned_filename)
+
     return season, episode, base_name
 
 @pbot.on_message(filters.private & (filters.document | filters.audio | filters.video))
