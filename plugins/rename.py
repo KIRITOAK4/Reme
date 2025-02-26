@@ -16,36 +16,45 @@ from .chatid import get_chat_status
 from .metaedit import process_rename, change_metadata, generate_sample
 from Krito import ubot, pbot, USER_CHAT
 
-
 async def extract_season_episode(filename):
     """Extracts season and episode numbers from the filename and removes them from the base name."""
     season, episode = None, None
 
-    # Improved regex to correctly capture season and episode
-    match = re.search(r"[Ss]?(?:eason)?\s*(\d+)[\s._-]*[Ee]?(?:pisode)?\s*(\d+)", filename, re.IGNORECASE)
+    # Regex to match season and episode patterns
+    match = re.search(
+        r"(?:(?:[Ss]eason|\b[Ss]\b)[\s._-]*0*(\d+)[\s._-]*)?(?:[Ee]pisode|\b[Ee]\b)?[\s._-]*0*(\d+)", 
+        filename, re.IGNORECASE
+    )
+
     if match:
         season, episode = match.groups()
-        cleaned_filename = re.sub(re.escape(match.group(0)), "", filename).strip()
     else:
-        # Try to match season only
-        match = re.search(r"[Ss]?(?:eason)?\s*(\d+)", filename, re.IGNORECASE)
-        if match:
-            season = match.group(1)
-            cleaned_filename = re.sub(re.escape(match.group(0)), "", filename).strip()
+        # Separate season-only match
+        season_match = re.search(r"(?:[Ss]eason|\b[Ss]\b)[\s._-]*0*(\d+)", filename, re.IGNORECASE)
+        if season_match:
+            season = season_match.group(1)
 
-        # Try to match episode only
-        match = re.search(r"[Ee]?(?:pisode)?\s*(\d+)", filename, re.IGNORECASE)
-        if match:
-            episode = match.group(1)
-            cleaned_filename = re.sub(re.escape(match.group(0)), "", filename).strip()
+        # Separate episode-only match
+        episode_match = re.search(r"(?:[Ee]pisode|\b[Ee]\b)[\s._-]*0*(\d+)", filename, re.IGNORECASE)
+        if episode_match:
+            episode = episode_match.group(1)
 
-    # Ensure cleaned filename is properly formatted
+    # Remove matched patterns from the filename
+    cleaned_filename = filename
+    if match:
+        cleaned_filename = re.sub(re.escape(match.group(0)), "", filename).strip()
+    elif season_match:
+        cleaned_filename = re.sub(re.escape(season_match.group(0)), "", cleaned_filename).strip()
+    elif episode_match:
+        cleaned_filename = re.sub(re.escape(episode_match.group(0)), "", cleaned_filename).strip()
+
+    # Remove extra spaces, dots, underscores, or dashes at the end
     cleaned_filename = re.sub(r"[\s._-]+$", "", cleaned_filename).strip()
-
-    # Extract base name without extension
+    
     base_name, _ = os.path.splitext(cleaned_filename)
 
     return season, episode, base_name
+
 
 @pbot.on_message(filters.private & (filters.document | filters.audio | filters.video))
 async def rename_start(client, message):
