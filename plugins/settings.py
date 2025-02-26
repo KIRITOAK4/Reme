@@ -153,7 +153,7 @@ async def set_template_callback(client, callback_query):
         "[S {season} EP {episode}] {cz_name}",
         "[Season {season} Episode {episode}] {cz_name}",
         "[Ep {episode}] {cz_name}",
-        "[SEASON {season} EPISODE {episode}] {cz_name}"
+        "[S{season}_EP{episode}] {cz_name}"
     ]
     template_text = "\n".join([f"{i+1}. {template}" for i, template in enumerate(templates)])
     await callback_query.edit_message_text(
