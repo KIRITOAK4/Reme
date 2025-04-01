@@ -150,8 +150,8 @@ async def set_template_callback(client, callback_query):
     templates = [
         "[S {season} Ep {episode}] {cz_name}",
         "[s {season} ep {episode}] {cz_name}",
-        "[S {season} EP {episode}] {cz_name}",
-        "[Season {season} Episode {episode}] {cz_name}",
+        "[S{season} EP{episode}] {cz_name}",
+        "[s{season} ep{episode}] {cz_name}",
         "[Ep {episode}] {cz_name}",
         "[S{season}_EP{episode}] {cz_name}"
     ]
@@ -215,12 +215,12 @@ async def handle_user_reply(client, message):
 
     async def handle_template_choice():
         templates = [
-            "[S{season} Ep{episode}] {cz_name}",
-            "[s{season} ep{episode}] {cz_name}",
+            "[S {season} Ep {episode}] {cz_name}",
+            "[s {season} ep {episode}] {cz_name}",
             "[S{season} EP{episode}] {cz_name}",
-            "[Season{season} Episode{episode}] {cz_name}",
-            "[Ep{episode}] {cz_name}",
-            "[SEASON{season} EPISODE{episode}] {cz_name}",
+            "[s{season} ep{episode}] {cz_name}",
+            "[Ep {episode}] {cz_name}",
+            "[S{season}_EP{episode}] {cz_name}"
         ]
         try:
             choice = int(message.text)
