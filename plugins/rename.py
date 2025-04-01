@@ -86,8 +86,8 @@ async def callback_handler(client, callback_query):
         original_message = callback_query.message.reply_to_message
 
         if callback_data == "sample":
-            await callback_query.answer("❌ Still in beta feature.", show_alert=True)
-            return
+        #    await callback_query.answer("❌ Still in beta feature.", show_alert=True)
+        #    return
 
         file = getattr(original_message, original_message.media.value)
         if not file or not file.file_name.endswith(('.mkv', '.mp4')):
