@@ -77,7 +77,6 @@ async def rename_start(client, message):
         await asyncio.sleep(e.value)
         await message.reply_text(text=text, reply_to_message_id=message.id, reply_markup=InlineKeyboardMarkup(buttons))
 
-
 @pbot.on_callback_query(filters.regex(r"^(rename|sample|auto_rename)"))
 async def callback_handler(client, callback_query):
     """Handles callback queries for rename, auto rename, and sample options."""
@@ -89,48 +88,52 @@ async def callback_handler(client, callback_query):
         if callback_data == "sample":
             await callback_query.answer("❌ Still in beta feature.", show_alert=True)
             return
-        # file = getattr(original_message, original_message.media.value)
-        # if not file or not file.file_name.endswith(('.mkv', '.mp4')):
-        #     await callback_query.answer("❌ Only .mkv or .mp4 files are supported.", show_alert=True)
-        #     return
 
-        # await callback_query.message.delete()
+        file = getattr(original_message, original_message.media.value)
+        if not file or not file.file_name.endswith(('.mkv', '.mp4')):
+            await callback_query.answer("❌ Only .mkv or .mp4 files are supported.", show_alert=True)
+            return
 
-        # input_path = f"downloads/{file.file_name}"
-        # output_path = f"downloads/sample_{os.path.splitext(file.file_name)[0]}.mp4"
-        # ms = await callback_query.message.reply_text("📥 Downloading the file...")
+        await callback_query.message.delete()
 
-        # try:
-        #     file_path = await client.download_media(
-        #         message=original_message,
-        #         file_name=input_path,
-        #         progress=progress_for_pyrogram,
-        #         progress_args=("Downloading...", ms, time.time())
-        #     )
-        # except Exception as e:
-        #     await ms.edit(f"❌ Download failed: {e}")
-        #     return
+        input_path = f"downloads/{file.file_name}"
+        output_path = f"downloads/sample_{os.path.splitext(file.file_name)[0]}.mp4"
+        ms = await callback_query.message.reply_text("📥 Downloading the file...")
 
-        # sample_path = await generate_sample(input_path, output_path, user_id, ms)
-        # if not sample_path:
-        #     return
+        try:
+            file_path = await client.download_media(
+                message=original_message,
+                file_name=input_path,
+                progress=progress_for_pyrogram,
+                progress_args=("Downloading...", ms, time.time())
+            )
+        except Exception as e:
+            await ms.edit(f"❌ Download failed: {e}")
+            return
 
-        # await ms.edit("📤 Uploading the generated sample...")
-        # try:
-        #     await client.send_video(
-        #         chat_id=callback_query.message.chat.id,
-        #         video=sample_path,
-        #         caption="🎥 Here is your sample!"
-        #     )
-        #     await ms.delete()
-        # except Exception as e:
-        #     await ms.edit(f"❌ Failed to upload sample: {e}")
-        # finally:
-        #     if os.path.exists(input_path):
-        #         os.remove(input_path)
-        #     if os.path.exists(output_path):
-        #         os.remove(output_path)
-        # return
+        sample_path = await generate_sample(input_path, output_path, user_id, ms)
+        if not sample_path:
+            return
+
+        await ms.edit("📤 Uploading the generated sample...")
+        try:
+            await client.send_video(
+                chat_id=callback_query.message.chat.id,
+                video=sample_path,
+                caption="🎥 Here is your sample!"
+            )
+            await ms.delete()
+        except Exception as e:
+            await ms.edit(f"❌ Failed to upload sample: {e}")
+        finally:
+            if os.path.exists(input_path):
+                os.remove(input_path)
+            if os.path.exists(output_path):
+                os.remove(output_path)
+        return
+
+    except Exception as e:
+        await callback_query.message.reply_text(f"❌ An error occurred forward message at @devil_testing_bot: {e}")       
 
         file = getattr(original_message, original_message.media.value)
         filename = file.file_name
