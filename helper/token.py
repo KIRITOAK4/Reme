@@ -65,19 +65,18 @@ def generate_buttons(new_token):
     return buttons  
 
 async def check_user_limit(user_id):
-    """Check if user exceeded space limit and reset if a new day has started."""
-    now = datetime.now(IST)
-    current_space_used = await db.get_space_used(user_id)
-    filled_at = await db.get_filled_time(user_id)  # Retrieve when space was first exceeded
-
-    if current_space_used > MAX_SPACE:
-        if filled_at:
-            filled_time = datetime.fromisoformat(filled_at).astimezone(IST)
-            if filled_time.date() < now.date():  # If the last stored date is before today
-                await db.set_space_used(user_id, 0)  # Reset usage
-                await db.reset_filled_time(user_id)  # Clear timestamp
-                return False  # Allow new uploads
-        else:
-            await db.set_filled_time(user_id, now.isoformat())  # Set time of limit breach
-        return True  # Deny upload if same day
-    return False  # Allow upload if under limit
+    """
+    Check if the user is blocked due to space limit.
+    Reset block if a new calendar day has started.
+    """
+    filled_time = await db.get_filled_time(user_id)
+    if filled_time:
+        filled_dt = datetime.fromisoformat(filled_time).astimezone(IST)
+        # Switched from 24-hour lockout to calendar day-based reset
+        # if datetime.now(IST) - filled_dt < timedelta(days=1):
+        #     return False  # still blocked (24-hour lockout - now removed)
+        if filled_dt.date() == datetime.now(IST).date():
+            return False
+        await db.reset_filled_time(user_id)
+        await db.set_space_used(user_id, 0)
+    return True
