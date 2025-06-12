@@ -52,7 +52,8 @@ async def extract_season_episode(filename):
 async def rename_start(client, message):
     """Handles the start of the renaming process by showing options."""
     user_id = message.from_user.id
-    if await check_user_limit(user_id):
+    is_blocked = not await check_user_limit(user_id)
+    if is_blocked:
         error_msg, button = await validate_user(message)
         if error_msg:
             await message.reply_text(error_msg, reply_markup=InlineKeyboardMarkup(button) if button else None)
