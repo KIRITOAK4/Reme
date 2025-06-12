@@ -34,10 +34,24 @@ async def fetch_users(client, message):
     async for user in users:
         user_id = user["_id"]
         space_used = user.get("space_used", 0)
+        filled_at = user.get("filled_at")
 
         if space_used > 0:
             total_space += space_used
-            user_data.append(f"User: {user_id}, Space Used: {humanbytes(space_used)}")
+            if filled_at:
+                try:
+                    # Format timestamp nicely if it's ISO format
+                    dt = datetime.fromisoformat(filled_at)
+                    filled_at_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    filled_at_str = str(filled_at)
+                user_data.append(
+                    f"User: {user_id}, Space Used: {humanbytes(space_used)}, Filled At: {filled_at_str}"
+                )
+            else:
+                user_data.append(
+                    f"User: {user_id}, Space Used: {humanbytes(space_used)}"
+                )
 
     if user_data:
         user_data.append(f"\nTotal Space Used: {humanbytes(total_space)}")
