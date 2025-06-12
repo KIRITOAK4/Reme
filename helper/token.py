@@ -64,19 +64,22 @@ def generate_buttons(new_token):
     ])
     return buttons  
 
-async def check_user_limit(user_id):
-    """
-    Check if the user is blocked due to space limit.
-    Reset block if a new calendar day has started.
-    """
+async def check_user_limit(user_id, upcoming_file_size=0):
+    
     filled_time = await db.get_filled_time(user_id)
     if filled_time:
         filled_dt = datetime.fromisoformat(filled_time).astimezone(IST)
-        # Switched from 24-hour lockout to calendar day-based reset
+        # Optional old logic (commented)
         # if datetime.now(IST) - filled_dt < timedelta(days=1):
-        #     return False  # still blocked (24-hour lockout - now removed)
+        #     return False  # still blocked
         if filled_dt.date() == datetime.now(IST).date():
             return False
         await db.reset_filled_time(user_id)
         await db.set_space_used(user_id, 0)
+
+    used_space = await db.get_space_used(user_id)
+    if (used_space + upcoming_file_size) > MAX_SPACE:
+        await db.set_filled_time(user_id, datetime.now(IST).isoformat())
+        return True
+
     return True
