@@ -146,13 +146,7 @@ class Database:
         """Set the space used by a user and track when they exceed their limit."""
         await self.col.update_one(
             {"_id": int(id)},
-            {"$set": {"space_used": space_used}}
-        )
-
-        if space_used > MAX_SPACE:
-            existing_filled_time = await self.get_filled_time(id)
-            if existing_filled_time is None:  # Store timestamp only if not already set
-                await self.set_filled_time(id, datetime.now(IST).isoformat())
+            {"$set": {"space_used": space_used}})
 
     async def get_space_used(self, id):
         """Get the space used by a user (default: 0)."""
