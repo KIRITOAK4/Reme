@@ -3,6 +3,7 @@ import re
 import time
 import asyncio
 from datetime import datetime, timedelta
+from pytz import timezone
 from pyrogram import Client, filters
 from pyrogram.enums import MessageMediaType
 from pyrogram.errors import FloodWait
@@ -340,6 +341,7 @@ async def refunc(client, message):
                 await ms.edit(f"❌ Upload error: {e}")
                 return
 
+            IST = timezone("Asia/Kolkata")
             current_space_used = await db.get_space_used(message.chat.id)
             await db.set_space_used(message.chat.id, current_space_used + file.file_size)
             updated_space = await db.get_space_used(message.chat.id)
