@@ -22,7 +22,7 @@ async def validate_user(message, button=None):
             return None, None
 
         token, expire = await db.get_token_and_time(userid)
-        reset_time = get_next_reset_time(TOKEN_TIMEOUT)
+        reset_time = get_last_reset_time(TOKEN_TIMEOUT)
         now = datetime.now(IST)
         
         if expire is None:
