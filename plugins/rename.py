@@ -97,7 +97,7 @@ async def callback_handler(client, callback_query):
 
             sample_duration = await db.get_sample_value(user_id)
             if sample_duration == 0:
-                await callback_query.answer("❌ Sample duration not set. Use /sample_set to configure.", show_alert=True)
+                await callback_query.answer("❌ Sample duration not set. Use /settings to configure.", show_alert=True)
                 return
                 
             await callback_query.message.delete()
