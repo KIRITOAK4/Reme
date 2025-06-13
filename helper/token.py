@@ -64,7 +64,7 @@ def generate_buttons(new_token):
     ])
     return buttons  
 
-async def check_user_limit(user_id, upcoming_file_size=0):
+async def check_user_limit(user_id):
     filled_time = await db.get_filled_time(user_id)
     if filled_time:
         filled_dt = datetime.fromisoformat(filled_time).astimezone(IST)
