@@ -52,17 +52,17 @@ async def extract_season_episode(filename):
 async def rename_start(client, message):
     """Handles the start of the renaming process by showing options."""
     user_id = message.from_user.id
-    file = getattr(message, message.media.value)
-    filename = file.file_name
-    r_filesize = file.file_size
-    filesize = humanbytes(file.file_size)
     
-    is_blocked = not await check_user_limit(user_id, r_filesize)
+    is_blocked = not await check_user_limit(user_id)
     if is_blocked:
         error_msg, button = await validate_user(message)
         if error_msg:
             await message.reply_text(error_msg, reply_markup=InlineKeyboardMarkup(button) if button else None)
             return
+
+    file = getattr(message, message.media.value)
+    filename = file.file_name
+    filesize = humanbytes(file.file_size)
 
     try:
         text = f"""**__What do you want me to do with this file?__**\n\n**File Name** :- `{filename}`\n\n**File Size** :- `{filesize}`"""
