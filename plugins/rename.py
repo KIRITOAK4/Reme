@@ -95,6 +95,11 @@ async def callback_handler(client, callback_query):
                 await callback_query.answer("❌ Only .mkv or .mp4 files are supported.", show_alert=True)
                 return
 
+            sample_duration = await db.get_sample_value(user_id)
+            if sample_duration == 0:
+                await callback_query.answer("❌ Sample duration not set. Use /sample_set to configure.", show_alert=True)
+                return
+                
             await callback_query.message.delete()
 
             input_path = f"downloads/{file.file_name}"
