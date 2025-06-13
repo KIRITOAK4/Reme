@@ -8,9 +8,11 @@ from pyrogram.types import Message
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from PIL import Image
+from datetime import datetime, timedelta
+from pytz import timezone
 from helper.utils import progress_for_pyrogram, convert, humanbytes
 from .chatid import get_chat_status
-from Krito import ubot, pbot, USER_CHAT
+from Krito import ubot, pbot, USER_CHAT, MAX_SPACE
 
 async def change_metadata(input_path, output_path, metadata, ms):
     """
@@ -66,9 +68,6 @@ async def generate_sample(input_path, output_path, user_id, ms):
     try:
         # Fetch sample duration from the database
         sample_duration = await db.get_sample_value(user_id)
-        if sample_duration == 0:
-            await ms.edit("❌ Sample duration not set. Please set it first.")
-            return None
 
         # Get video duration using ffprobe
         command = [
@@ -219,8 +218,13 @@ async def process_rename(client: Client, original_message: Message, new_name: st
             return
 
         # Update storage usage in DB
+        IST = timezone("Asia/Kolkata")
         current_space_used = await db.get_space_used(original_message.chat.id)
         await db.set_space_used(original_message.chat.id, current_space_used + file.file_size)
+        updated_space = await db.get_space_used(message.chat.id)
+        if updated_space > MAX_SPACE:
+            await db.set_filled_time(message.chat.id, datetime.now(IST).isoformat())
+                
 
         await ms.delete()
 
