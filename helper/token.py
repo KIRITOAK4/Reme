@@ -81,7 +81,7 @@ async def check_user_limit(user_id):
         await db.set_space_used(user_id, 0)
     return True
 
-@pbot.on_message(filters.command("ping") & filters.private)
+@pbot.on_message(filters.command("sing") & filters.private)
 async def ping_command(client, message: Message):
     user_id = message.from_user.id
     error_msg, button = await validate_user(message)
