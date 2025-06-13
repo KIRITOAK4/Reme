@@ -76,3 +76,23 @@ async def check_user_limit(user_id):
         await db.reset_filled_time(user_id)
         await db.set_space_used(user_id, 0)
     return True
+
+
+#from pyrogram import filters
+#from pyrogram.types import Message, InlineKeyboardMarkup
+
+@pbot.on_message(filters.command("ping") & filters.private)
+async def ping_command(client, message: Message):
+    user_id = message.from_user.id
+
+    # Check token validity
+    error_msg, button = await validate_user(message)
+    if error_msg:
+        await message.reply_text(
+            error_msg,
+            reply_markup=InlineKeyboardMarkup(button) if button else None
+        )
+        return
+
+    await message.reply_text("✅ Pong! You're verified.")
+    
