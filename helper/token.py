@@ -65,19 +65,20 @@ def generate_buttons(new_token):
     return buttons  
 
 async def check_user_limit(user_id, upcoming_file_size=0):
-    
     filled_time = await db.get_filled_time(user_id)
     if filled_time:
         filled_dt = datetime.fromisoformat(filled_time).astimezone(IST)
-        # Optional old logic (commented)
+        # Optional 24-hour lockout (commented out)
         # if datetime.now(IST) - filled_dt < timedelta(days=1):
-        #     return False  # still blocked
+        #     return False
         if filled_dt.date() == datetime.now(IST).date():
             return False
+
         await db.reset_filled_time(user_id)
         await db.set_space_used(user_id, 0)
 
     used_space = await db.get_space_used(user_id)
+
     if (used_space + upcoming_file_size) > MAX_SPACE:
         await db.set_filled_time(user_id, datetime.now(IST).isoformat())
         return False
