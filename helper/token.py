@@ -24,7 +24,12 @@ async def validate_user(message, button=None):
         token, expire = await db.get_token_and_time(userid)
         reset_time = get_next_reset_time(TOKEN_TIMEOUT)
         now = datetime.now(IST)
-        is_expired = (expire is None or now >= reset_time)
+        
+        if expire is None:
+            is_expired = True
+        else:
+            token_time = datetime.fromtimestamp(float(expire), IST)
+            is_expired = token_time < reset_time
 
         if is_expired:
             new_token = token if (expire is None and token) else str(uuid.uuid4())
@@ -43,18 +48,15 @@ async def validate_user(message, button=None):
     except Exception as e:
         return f"An unexpected error occurred: {e}", button
 
-def get_next_reset_time(token_timeout):
-    """Parses time format 'HH:MM' and returns the next reset datetime."""
-    now = datetime.now(IST)    
-    try:
-        hour, minute = map(int, token_timeout.split(":"))
-        reset_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        if now >= reset_time:
-            reset_time += timedelta(days=1)
-        return reset_time
-    except ValueError:
-        raise ValueError("Invalid TOKEN_TIMEOUT format. Use 'HH:MM' (e.g., '07:08').")
-
+def get_last_reset_time(token_timeout):
+    """Return the last daily reset time based on TOKEN_TIMEOUT (HH:MM)."""
+    now = datetime.now(IST)
+    hour, minute = map(int, token_timeout.split(":"))
+    reset_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if now < reset_time:
+        reset_time -= timedelta(days=1)
+    return reset_time
+    
 def generate_buttons(new_token):
     buttons = []
     if TUTORIAL_URL:
