@@ -73,14 +73,6 @@ async def check_user_limit(user_id, upcoming_file_size=0):
         #     return False
         if filled_dt.date() == datetime.now(IST).date():
             return False
-
         await db.reset_filled_time(user_id)
         await db.set_space_used(user_id, 0)
-
-    used_space = await db.get_space_used(user_id)
-
-    if (used_space + upcoming_file_size) > MAX_SPACE:
-        await db.set_filled_time(user_id, datetime.now(IST).isoformat())
-        return False
-
     return True
