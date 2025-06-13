@@ -14,7 +14,7 @@ from helper.database import db
 from helper.token import validate_user, check_user_limit
 from .chatid import get_chat_status
 from .metaedit import process_rename, change_metadata, generate_sample
-from Krito import ubot, pbot, USER_CHAT
+from Krito import ubot, pbot, USER_CHAT, MAX_SPACE
 
 async def extract_season_episode(filename):
     season, episode = None, None
@@ -341,6 +341,9 @@ async def refunc(client, message):
 
             current_space_used = await db.get_space_used(message.chat.id)
             await db.set_space_used(message.chat.id, current_space_used + file.file_size)
+            updated_space = await db.get_space_used(message.chat.id)
+            if updated_space > MAX_SPACE:
+                await db.set_filled_time(message.chat.id, datetime.now(IST).isoformat())
 
             await ms.delete()
             os.remove(updated_path)
