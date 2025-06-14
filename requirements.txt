@@ -1,12 +1,10 @@
 aiohttp  
 cloudscraper  
 dnspython
-ffmpeg
 ffmpeg-python  
 hachoir
 motor  
 Pillow  
-python-dotenv
 pytz
 TgCrypto
 telegraph  
