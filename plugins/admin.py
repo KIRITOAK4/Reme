@@ -73,36 +73,39 @@ async def restart_bot(b, m):
 async def reset_user_space(client, message):
     try:
         command_parts = message.text.split()
-        
+
         if len(command_parts) == 2 and command_parts[1].lower() == "all":
             all_users_cursor = await db.get_all_users()
-            
-            async for user in all_users_cursor:  # ✅ Correct way to iterate cursor
+
+            async for user in all_users_cursor:
                 user_id = user["_id"]
                 await db.set_space_used(user_id, 0)
+                await db.reset_filled_time(user_id)  # ✅ Reset filled time
                 try:
-                    await pbot.send_message(user_id, "Your used space has been reset to 0. Enjoy!")
+                    await pbot.send_message(user_id, "✅ Your used space and limit lock has been reset. You can upload again.")
                 except Exception as e:
                     await message.reply_text(f"❌ Failed to notify user {user_id}. Error: {e}")
-                    
-            await message.reply_text("✅ Space usage for all users has been reset to 0.")
-        
+
+            await message.reply_text("✅ Space usage and reset time cleared for all users.")
+
         elif len(command_parts) == 2:
             user_id = int(command_parts[1])
             current_space_used = await db.get_space_used(user_id)
-            
+
             if current_space_used is None:
                 await message.reply_text(f"⚠️ No data found for user {user_id}.")
                 return
-            
+
             await db.set_space_used(user_id, 0)
-            await message.reply_text(f"✅ User {user_id}'s space usage has been reset to 0.\n(Previous usage: {current_space_used} bytes)")
+            await db.reset_filled_time(user_id)  # ✅ Reset filled time
+            await message.reply_text(f"✅ User {user_id}'s space and reset time have been cleared.\n(Previous usage: {current_space_used} bytes)")
             try:
-                await pbot.send_message(user_id, "Your used space has been reset to 0. Enjoy!")
+                await pbot.send_message(user_id, "✅ Your used space and limit lock has been reset. You can upload again.")
             except Exception as e:
-                await message.reply_text(f"❌ Failed to notify user {user_id}. Error: {e}")        
+                await message.reply_text(f"❌ Failed to notify user {user_id}. Error: {e}")
         else:
-            await message.reply_text("⚠️ Invalid format! Use: `/reset_time <user_id>` or `/reset_time all`")    
+            await message.reply_text("⚠️ Invalid format! Use: `/reset_time <user_id>` or `/reset_time all`")
+
     except ValueError:
         await message.reply_text("⚠️ Invalid user ID format. Please provide a valid user ID.")
     except Exception as e:
