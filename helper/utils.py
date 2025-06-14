@@ -5,7 +5,6 @@ from pytz import timezone
 from Krito import LOG_CHANNEL
 from Krito.txt import Txt
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from datetime import datetime
 
 async def progress_for_pyrogram(current, total, ud_type, message, start):
     now = time.time()
@@ -34,9 +33,11 @@ async def progress_for_pyrogram(current, total, ud_type, message, start):
         try:
             await message.edit(
                 text=f"{ud_type}\n\n{tmp}",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✖️ 𝙲𝙰𝙽𝙲𝙴𝙻 ✖️", callback_data="close")]])
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("✖️ 𝙲𝙰𝙽𝙲𝙴𝙻 ✖️", callback_data="close")]]
+                )
             )
-        except:
+        except Exception:
             pass
 
 def humanbytes(size):
@@ -44,24 +45,23 @@ def humanbytes(size):
         return ""
     power = 2**10
     n = 0
-    Dic_powerN = {0: ' ', 1: 'K', 2: 'M', 3: 'G', 4: 'T'}
+    Dic_powerN = {0: '', 1: 'K', 2: 'M', 3: 'G', 4: 'T'}
     while size > power:
         size /= power
         n += 1
-    human_readable_size = f"{round(size, 2)} {Dic_powerN[n]}B"
-    return human_readable_size
+    return f"{round(size, 2)} {Dic_powerN[n]}B"
 
 def TimeFormatter(milliseconds: int) -> str:
     seconds, milliseconds = divmod(int(milliseconds), 1000)
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
-    tmp = ((str(days) + "ᴅ, ") if days else "") + \
-          ((str(hours) + "ʜ, ") if hours else "") + \
-          ((str(minutes) + "ᴍ, ") if minutes else "") + \
-          ((str(seconds) + "ꜱ, ") if seconds else "") + \
-          ((str(milliseconds) + "ᴍꜱ, ") if milliseconds else "")
-    return tmp[:-2]
+    formatted = ((str(days) + "ᴅ, ") if days else "") + \
+                ((str(hours) + "ʜ, ") if hours else "") + \
+                ((str(minutes) + "ᴍ, ") if minutes else "") + \
+                ((str(seconds) + "ꜱ, ") if seconds else "") + \
+                ((str(milliseconds) + "ᴍꜱ, ") if milliseconds else "")
+    return formatted[:-2]
 
 def convert(seconds):
     seconds = seconds % (24 * 3600)
@@ -78,13 +78,15 @@ async def send_log(b, u):
         time = curr.strftime('%I:%M:%S %p')
         await b.send_message(
             LOG_CHANNEL,
-            f"**--Nᴇᴡ Uꜱᴇʀ Sᴛᴀʀᴛᴇᴅ Tʜᴇ Bᴏᴛ--**\n\nUꜱᴇʀ: {u.mention}\nIᴅ: `{u.id}`\nUɴ: @{u.username}\n\nDᴀᴛᴇ: {date}\nTɪᴍᴇ: {time}\n\nBy: {b.mention}"
+            f"**--Nᴇᴡ Uꜱᴇʀ Sᴛᴀʀᴛᴇᴅ Tʜᴇ Bᴏᴛ--**\n\n"
+            f"Uꜱᴇʀ: {u.mention}\nIᴅ: `{u.id}`\nUɴ: @{u.username}\n\n"
+            f"Dᴀᴛᴇ: {date}\nTɪᴍᴇ: {time}\n\nBy: {b.mention}"
         )
 
+
 async def split_and_send_message(message, text):
-    """Splits a long message into chunks and sends them separately."""
     chunk_size = 4000  # Keep buffer for safety
     chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
-    
     for chunk in chunks:
         await message.reply(chunk)
+        
