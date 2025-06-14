@@ -138,7 +138,7 @@ class Database:
         user = await self.col.find_one({"_id": int(id)})
         return user.get("sample_value", 0) if user else 0
 
-    async def update_metadata_for_old_users(self):
+    async def update_db(self):
         async for user in self.col.find({}):
             user_id = user["_id"]
             updated_data = {
