@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 @pbot.on_message(filters.command(["stats", "status"]))
 async def get_stats(bot, message):
     if message.from_user.id not in ADMIN:
-        await message.reply_text("You are not authorized to use this command.", reply_to_message_id=message.id)
+        await message.reply_text("🛑 Whom do you think you are?", reply_to_message_id=message.id)
         return
 
     total_users = await db.total_users_count()
@@ -25,8 +25,12 @@ async def get_stats(bot, message):
     time_taken_s = (end_t - start_t) * 1000
     await st.edit(text=f"**--Bᴏᴛ Sᴛᴀᴛᴜꜱ--** \n\n**⌚️ Bᴏᴛ Uᴩᴛɪᴍᴇ:** {uptime} \n**🐌 Cᴜʀʀᴇɴᴛ Pɪɴɢ:** `{time_taken_s:.3f} ᴍꜱ` \n**👭 Tᴏᴛᴀʟ Uꜱᴇʀꜱ:** `{total_users}`")
 
-@pbot.on_message(filters.command("fetch_user") & filters.user(ADMIN))
+@pbot.on_message(filters.command("fetch_user"))
 async def fetch_users(client, message):
+    if message.from_user.id not in ADMIN:
+        await message.reply_text("🛑 Whom do you think you are?", reply_to_message_id=message.id)
+        return
+
     users = await db.get_all_users()
     total_space = 0
     user_data = []
@@ -40,18 +44,13 @@ async def fetch_users(client, message):
             total_space += space_used
             if filled_at:
                 try:
-                    # Format timestamp nicely if it's ISO format
                     dt = datetime.fromisoformat(filled_at)
                     filled_at_str = dt.strftime("%Y-%m-%d %H:%M:%S")
                 except Exception:
                     filled_at_str = str(filled_at)
-                user_data.append(
-                    f"User: {user_id}, Space Used: {humanbytes(space_used)}, Filled At: {filled_at_str}"
-                )
+                user_data.append(f"User: {user_id}, Space Used: {humanbytes(space_used)}, Filled At: {filled_at_str}")
             else:
-                user_data.append(
-                    f"User: {user_id}, Space Used: {humanbytes(space_used)}"
-                )
+                user_data.append(f"User: {user_id}, Space Used: {humanbytes(space_used)}")
 
     if user_data:
         user_data.append(f"\nTotal Space Used: {humanbytes(total_space)}")
@@ -64,13 +63,16 @@ async def fetch_users(client, message):
 @pbot.on_message(filters.private & filters.command("restart"))
 async def restart_bot(b, m):
     if m.from_user.id not in ADMIN:
-        await m.reply_text("You are not authorized to use this command.", reply_to_message_id=m.id)
+        await m.reply_text("🛑 Whom do you think you are?", reply_to_message_id=m.id)
         return
     await m.reply_text("🔄__Restarting...__")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
-@pbot.on_message(filters.command("reset_time") & filters.user(ADMIN))
-async def reset_user_space(client, message):
+@pbot.on_message(filters.command("reset_time"))
+async def reset_space(client, message):
+    if message.from_user.id not in ADMIN:
+        await message.reply_text("🛑 Whom do you think you are?", reply_to_message_id=message.id)
+        return
     try:
         command_parts = message.text.split()
 
@@ -80,7 +82,7 @@ async def reset_user_space(client, message):
             async for user in all_users_cursor:
                 user_id = user["_id"]
                 await db.set_space_used(user_id, 0)
-                await db.reset_filled_time(user_id)  # ✅ Reset filled time
+                await db.reset_filled_time(user_id)
                 try:
                     await pbot.send_message(user_id, "✅ Your used space and limit lock has been reset. You can upload again.")
                 except Exception as e:
@@ -97,7 +99,7 @@ async def reset_user_space(client, message):
                 return
 
             await db.set_space_used(user_id, 0)
-            await db.reset_filled_time(user_id)  # ✅ Reset filled time
+            await db.reset_filled_time(user_id)
             await message.reply_text(f"✅ User {user_id}'s space and reset time have been cleared.\n(Previous usage: {current_space_used} bytes)")
             try:
                 await pbot.send_message(user_id, "✅ Your used space and limit lock has been reset. You can upload again.")
@@ -110,17 +112,24 @@ async def reset_user_space(client, message):
         await message.reply_text("⚠️ Invalid user ID format. Please provide a valid user ID.")
     except Exception as e:
         await message.reply_text(f"❌ An error occurred while resetting space usage: {e}")
-        
-@pbot.on_message(filters.command("update_metadata") & filters.user(ADMIN))
-async def update_metadata_for_old_users_command(client, message):
+
+@pbot.on_message(filters.command("update_metadata"))
+async def update_db_command(client, message):
+    if message.from_user.id not in ADMIN:
+        await message.reply_text("🛑 Whom do you think you are?", reply_to_message_id=message.id)
+        return
     try:
-        await db.update_metadata_for_old_users()
-        await message.reply_text("Metadata for old users has been updated successfully.")
+        await db.update_db()
+        await message.reply_text("Field for old users has been updated successfully.")
     except Exception as e:
         await message.reply_text(f"An error occurred: {e}")
 
-@pbot.on_message(filters.reply & filters.command("broadcast") & filters.user(ADMIN))
+@pbot.on_message(filters.reply & filters.command("broadcast"))
 async def broadcast_handler(bot: Client, m: Message):
+    if m.from_user.id not in ADMIN:
+        await m.reply_text("🛑 Whom do you think you are?", reply_to_message_id=m.id)
+        return
+
     await bot.send_message(LOG_CHANNEL, f"{m.from_user.mention} or {m.from_user.id} Iꜱ ꜱᴛᴀʀᴛᴇᴅ ᴛʜᴇ Bʀᴏᴀᴅᴄᴀꜱᴛ......")
     all_users = await db.get_all_users()
     broadcast_msg = m.reply_to_message
