@@ -57,8 +57,29 @@ async def fetch_users(client, message):
         response = "\n".join(user_data)
     else:
         response = "No users have used storage."
-
     await split_and_send_message(message, response)
+
+@pbot.on_message(filters.command("fetch"))
+async def fetch_user_data(client, message):
+    if message.from_user.id not in ADMIN:
+        return await message.reply_text("🛑 Whom do you think you are?", reply_to_message_id=message.id)
+
+    args = message.text.strip().split()
+    if len(args) != 2 or not args[1].isdigit():
+        return await message.reply_text("⚠️ Usage: `/fetch <user_id>`", quote=True)
+
+    user_id = int(args[1])
+    user_data = await db.col.find_one({"_id": user_id})
+
+    if not user_data:
+        return await message.reply_text("❌ User not found in the database.", quote=True)
+
+    lines = [f"📄 **User Data for ID `{user_id}`**:\n"]
+    for key, value in user_data.items():
+        lines.append(f"**{key}**: `{value}`")
+
+    formatted_text = "\n".join(lines)
+    await split_and_send_message(message, formatted_text)
 
 @pbot.on_message(filters.private & filters.command("restart"))
 async def restart_bot(b, m):
