@@ -54,5 +54,24 @@ async def forces_sub(client, message):
 
 @pbot.on_callback_query(filters.regex("refreshForceSub"))
 async def refresh_force_sub(client: Client, query: CallbackQuery):
-    await forces_sub(client, query.message)
-    await query.answer("🔄 Refreshed", show_alert=False)
+    user_id = query.from_user.id
+    all_joined = True
+
+    # Check if user has joined all channels
+    for force_sub in FORCE_SUB:
+        try:
+            member = await client.get_chat_member(force_sub, user_id)
+            if member.status not in [enums.ChatMemberStatus.MEMBER, enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]:
+                all_joined = False
+                break
+        except UserNotParticipant:
+            all_joined = False
+            break
+
+    if all_joined:
+        await query.message.edit_text("✅ Perfect! Now use me.")
+        await query.answer("You're all set!", show_alert=False)
+    else:
+        await forces_sub(client, query.message)
+        await query.answer("🔄 Still missing some channels. Try again after joining.", show_alert=False)
+
