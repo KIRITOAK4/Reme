@@ -138,22 +138,4 @@ class Database:
         user = await self.col.find_one({"_id": int(id)})
         return user.get("sample_value", 0) if user else 0
 
-    async def update_db(self):
-        async for user in self.col.find({}):
-            user_id = user["_id"]
-            updated_data = {
-                key: user.get(key, value)
-                for key, value in self.new_user(user_id).items()
-                if key != "_id"
-            }
-            # Ensure metadata contains all required subfields
-            existing_metadata = user.get("metadata", {})
-            updated_metadata = {
-                key: existing_metadata.get(key, DEFAULT_METADATA[key])
-                for key in DEFAULT_METADATA
-            }
-            updated_data["metadata"] = updated_metadata
-
-            await self.col.update_one({"_id": user_id}, {"$set": updated_data})
-
 db = Database(DB_URL, DB_NAME)
