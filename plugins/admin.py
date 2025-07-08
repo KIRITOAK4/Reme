@@ -161,17 +161,6 @@ async def reset_space(client, message):
     except Exception as e:
         await message.reply_text(f"❌ An error occurred while resetting space usage: {e}")
 
-# ==================== update_metadata
-@pbot.on_message(filters.command("update_metadata"))
-async def update_db_command(client, message):
-    if message.from_user.id not in ADMIN:
-        return await message.reply_text("🛑 Whom do you think you are?", reply_to_message_id=message.id)
-    try:
-        await db.update_db()
-        await message.reply_text("Field for old users has been updated successfully.")
-    except Exception as e:
-        await message.reply_text(f"An error occurred: {e}")
-
 # ==================== broadcast
 @pbot.on_message(filters.reply & filters.command("broadcast"))
 async def broadcast_handler(bot: Client, m: Message):
