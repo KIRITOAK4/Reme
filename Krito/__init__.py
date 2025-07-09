@@ -49,8 +49,9 @@ Text2 = Txt.TEXT_MESSAGE2
 Text3 = Txt.TEXT_MESSAGE3
 
 # -------------------------------DEFAULT---------------------------------------
+TRIGGERS = os.environ.get("TRIGGERS", "/ . !").split()
+UTRIGGERS = os.environ.get("TRIGGERS", ".").split()
 plugins = dict(root="plugins")
-
 # -------------------------------CLIENT SETUP-------------------------
 pbot = Client(
     "Renamer",
