@@ -6,7 +6,7 @@ from aiohttp import web
 from pyrogram import Client, __version__
 from pyrogram.raw.all import layer
 from route import web_server
-from Krito import pbot, ubot, ADMIN, LOG_CHANNEL
+from Krito import pbot, ubot, ADMIN, LOG_CHANNEL, WEBHOOK
 
 # 🧠 𝐈𝐍𝐓𝐄𝐑𝐀𝐂𝐓𝐈𝐕𝐄 𝐋𝐎𝐆𝐆𝐈𝐍𝐆 𝐒𝐄𝐓𝐔𝐏
 logging.basicConfig(
