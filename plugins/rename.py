@@ -202,7 +202,7 @@ async def refunc(client, message):
         reply_message = message.reply_to_message
         if reply_message.reply_markup and isinstance(reply_message.reply_markup, ForceReply):
             new_name = message.text
-            await message.delete()           
+            await message.delete()
             original = await client.get_messages(message.chat.id, reply_message.id)
             ori_msg = original.reply_to_message
             file = getattr(ori_msg, ori_msg.media.value)
@@ -216,9 +216,14 @@ async def refunc(client, message):
             file_path = f"downloads/{new_name}"
             await reply_message.delete()
             ms = await message.reply_text("📥 Downloading the file...")
-            
+
             try:
-                path = await client.download_media(message=ori_msg, file_name=file_path, progress=progress_for_pyrogram, progress_args=("Downloading...", ms, time.time()))
+                path = await client.download_media(
+                    message=ori_msg,
+                    file_name=file_path,
+                    progress=progress_for_pyrogram,
+                    progress_args=("Downloading...", ms, time.time())
+                )
             except Exception as e:
                 await ms.edit_text(f"❌ Download failed: {e}")
                 return
@@ -229,12 +234,25 @@ async def refunc(client, message):
             subtitle_title = metadata.get("subtitle")
             artist_title = metadata.get("artist")
             author_title = metadata.get("author")
-            
+
             duration = 0
+            audio = "Unknown"
+            resolution = "Unknown"
+            subtitles = "None"
             try:
                 meta = extractMetadata(createParser(file_path))
-                if meta and meta.has("duration"):
-                    duration = meta.get("duration").seconds
+                if meta:
+                    if meta.has("duration"):
+                        duration = meta.get("duration").seconds
+                    
+                    if meta.has("audio_codec"):
+                        audio = meta.get("audio_codec")
+                    
+                    if meta.has("video_width") and meta.has("video_height"):
+                        resolution = f"{meta.get('video_width')}x{meta.get('video_height')}"
+                    
+                    if meta.has("subtitles"):
+                        subtitles = ", ".join(meta.get("subtitles"))
             except Exception as e:
                 await ms.edit(f"❌ Error extracting metadata: {e}")
                 return
@@ -242,7 +260,7 @@ async def refunc(client, message):
             if not os.path.isdir("Metadata"):
                 os.mkdir("Metadata")
 
-            if file_path.endswith(('.mkv', '.mp4', '.mp3')):
+            if file_path.endswith((".mkv", ".mp4", ".mp3")):
                 new_metadata_path = f"Metadata/{new_name}"
                 metadata_dict = {
                     "video_title": video_title,
@@ -251,12 +269,13 @@ async def refunc(client, message):
                     "artist": artist_title,
                     "author": author_title
                 }
-                updated_path = await change_metadata(input_path=path, output_path=new_metadata_path, metadata=metadata_dict, ms=ms)
+                updated_path = await change_metadata(
+                    input_path=path, output_path=new_metadata_path, metadata=metadata_dict, ms=ms
+                )
             else:
                 updated_path = file_path
                 await ms.edit("⏳ File format not supported for metadata change, proceeding with upload ⚡")
 
-            # Fetch caption and thumbnail
             c_caption = await db.get_caption(message.chat.id)
             c_thumb = await db.get_thumbnail(message.chat.id)
 
@@ -265,7 +284,10 @@ async def refunc(client, message):
                     caption = c_caption.format(
                         filename=new_name,
                         filesize=humanbytes(file.file_size),
-                        duration=convert(duration)
+                        duration=convert(duration),
+                        audio=audio,
+                        subtitles=subtitles,
+                        resolution=resolution
                     )
                 except Exception as e:
                     await ms.edit(f"❌ Caption formatting error: {e}")
@@ -286,7 +308,6 @@ async def refunc(client, message):
                     await ms.edit(f"❌ Error processing thumbnail: {e}")
                     return
 
-            # Determine upload parameters
             chat_id, verified = await get_chat_status(message.chat.id)
             value = 1.9 * 1024 * 1024 * 1024
 
@@ -311,7 +332,6 @@ async def refunc(client, message):
                 return
 
             try:
-                # Prepare keyword arguments dynamically
                 kwargs = {
                     "chat_id": fupload,
                     "caption": caption,
@@ -337,7 +357,6 @@ async def refunc(client, message):
                         from_chat_id=suc.chat.id,
                         message_id=suc.message_id
                     )
-
             except Exception as e:
                 os.remove(updated_path)
                 os.remove(file_path)
@@ -367,3 +386,4 @@ async def refunc(client, message):
             os.remove(updated_path)
         if thumbnail_path and os.path.exists(thumbnail_path):
             os.remove(thumbnail_path)
+            

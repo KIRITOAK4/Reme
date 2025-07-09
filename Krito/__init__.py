@@ -1,5 +1,4 @@
-import os, logging, sys, re, time
-from pyrogram import Client
+import os, logging, re, time
 from .txt import Txt
 
 id_pattern = re.compile(r'^.\d+$')
@@ -44,42 +43,12 @@ SHORTEN_KEY = os.environ.get("SHORTEN_KEY", "atglinks.com ea08e13411f489f3e84f9b
 # -------------------------------LOGGING AND WEBHOOK----------------------
 LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", -1001682783965))
 WEBHOOK = bool(os.environ.get("WEBHOOK", True))
-
-Text = Txt.TEXT
-
 #--------------------------------Text1-------------------------
 
+Text = Txt.TEXT
 Text1 = Txt.TEXT_MESSAGE1
-
-#-----------------------------Text2-------------------------
-
 Text2 = Txt.TEXT_MESSAGE2
-
-#●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●Text3●●●●●●●●●●●●●●●●●●●●●●●●●
-
 Text3 = Txt.TEXT_MESSAGE3
 
 # -------------------------------DEFAULT---------------------------------------
-TRIGGERS = os.environ.get("TRIGGERS", "/ . !").split()
-UTRIGGERS = os.environ.get("TRIGGERS", ".").split()
 plugins = dict(root="plugins")
-
-# ------------------------------CONNECTION------------------------------------
-if BOT_TOKEN is not None:
-    try:
-        pbot = Client("Renamer", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH, max_concurrent_transmissions=200, workers=50, plugins=plugins)
-        LOGS.info("❤️ PBot Connected")
-    except Exception as e:
-        LOGS.info('😞 Error While Connecting To pBot')
-        LOGS.exception(e)
-        sys.exit()
-
-if isinstance(SESSION_STRING, str) and SESSION_STRING != "None":
-    try:
-        ubot = Client("Chizuru", session_string=SESSION_STRING, api_id=API_ID, api_hash=API_HASH, max_concurrent_transmissions=10, workers=50, plugins=plugins)
-        LOGS.info("❤️ UBot Connected")
-    except Exception as e:
-        LOGS.info('😞 Error While Connecting To uBot')
-        LOGS.exception(e)
-        sys.exit()
-
