@@ -59,5 +59,5 @@ async def start_clients():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(start_bot())  # <- call the correct function here
+    loop.run_until_complete(start_clients())  # <- call the correct function here
     loop.run_forever()
