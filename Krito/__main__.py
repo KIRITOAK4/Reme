@@ -6,10 +6,7 @@ from aiohttp import web
 from pyrogram import Client, __version__
 from pyrogram.raw.all import layer
 from route import web_server
-from Krito import (
-    API_ID, API_HASH, BOT_TOKEN, SESSION_STRING, BOT_NAME,
-    ADMIN, LOG_CHANNEL, WEBHOOK, BOT_UPTIME, plugins
-)
+from Krito import pbot, ubot, ADMIN, LOG_CHANNEL
 
 # 🧠 𝐈𝐍𝐓𝐄𝐑𝐀𝐂𝐓𝐈𝐕𝐄 𝐋𝐎𝐆𝐆𝐈𝐍𝐆 𝐒𝐄𝐓𝐔𝐏
 logging.basicConfig(
@@ -21,29 +18,6 @@ logger = logging.getLogger("🛠 𝐁𝐎𝐓-𝐒𝐓𝐀𝐑𝐓𝐔𝐏")
 
 async def start_clients():
     logger.info("🔌 *𝐈𝐍𝐈𝐓*: Starting bot client...")
-    pbot = Client(
-        "Renamer",
-        bot_token=BOT_TOKEN,
-        api_id=API_ID,
-        api_hash=API_HASH,
-        plugins=plugins,
-        max_concurrent_transmissions=200,
-        workers=50
-    )
-
-    ubot = None
-    if SESSION_STRING != "None":
-        logger.info("👤 *𝐔𝐒𝐄𝐑𝐁𝐎𝐓*: Detected. Booting...")
-        ubot = Client(
-            "Chizuru",
-            session_string=SESSION_STRING,
-            api_id=API_ID,
-            api_hash=API_HASH,
-            plugins=plugins,
-            max_concurrent_transmissions=10,
-            workers=50
-        )
-
     await pbot.start()
     logger.info("✅ *𝐁𝐎𝐓*: 𝐎𝐧𝐥𝐢𝐧𝐞")
 
