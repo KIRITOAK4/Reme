@@ -4,7 +4,7 @@ import asyncio
 from pyrogram.types import ForceReply
 from helper.utils import progress_for_pyrogram
 from helper.database import db
-from .metaedit import generate_sample, process_rename
+from plugins.metaedit import generate_sample, process_rename
 from Krito import ubot
 
 async def handle_sample(client, cb, file, original_msg):
