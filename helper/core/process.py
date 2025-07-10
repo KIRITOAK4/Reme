@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime
 from pytz import timezone
 from PIL import Image
-from pyrogram import Client
+from pyrogram import Client, filters
 from pyrogram.types import Message, ForceReply
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
