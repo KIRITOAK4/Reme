@@ -43,12 +43,10 @@ async def process_rename(client: Client, original_message: Message, new_name: st
             pass
 
         updated_path = file_path
-        await process_final_upload(client, original_message, file, updated_path, new_name, duration, file_path)
+        await process_final_upload(client, original_message, file, updated_path, new_name, duration, file_path, ms)
 
     except Exception as e:
         await original_message.reply_text(f"❌ An error occurred: {e}")
-
-from pyrogram.types import ForceReply
 
 @pbot.on_message(filters.private & filters.reply)
 async def refunc(client: Client, message: Message):
@@ -82,9 +80,12 @@ async def refunc(client: Client, message: Message):
                 os.remove(file_path)
             return
 
+        duration = 0  # fail-safe default
         try:
             meta = extractMetadata(createParser(file_path))
-            duration = meta.get("duration").seconds if meta and meta.has("duration") else 0
+            if meta and meta.has("duration"):
+                duration = meta.get("duration").seconds
+            await ms.edit("✏️ Changing metadata...")
         except Exception as e:
             await ms.edit(f"❌ Metadata error: {e}")
             if os.path.exists(file_path):
@@ -112,8 +113,10 @@ async def refunc(client: Client, message: Message):
 
         await process_final_upload(client, message, file, updated_path, new_name, duration, file_path)
 
-async def process_final_upload(client, message, file, updated_path, new_name, duration, file_path):
+async def process_final_upload(client, message, file, updated_path, new_name, duration, file_path, ms):
     try:
+        await ms.edit("📤 Uploading the file...")
+
         c_caption = await db.get_caption(message.chat.id)
         c_thumb = await db.get_thumbnail(message.chat.id)
 
@@ -152,8 +155,6 @@ async def process_final_upload(client, message, file, updated_path, new_name, du
 
         if not send_func:
             raise Exception("Invalid upload type selected")
-
-        ms = await message.reply_text("📤 Uploading the file...")
 
         kwargs = {
             "chat_id": fupload,
