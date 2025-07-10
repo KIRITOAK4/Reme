@@ -15,7 +15,7 @@ from helper.utils import progress_for_pyrogram, convert, humanbytes
 from helper.database import db
 from helper.token import validate_user, check_user_limit
 from .chatid import get_chat_status
-from .metaedit import change_metadata
+from helpet.core.metaedit import change_metadata
 from helper.core.rename_function import handle_sample, handle_auto_rename, handle_rename
 from Krito import ubot, pbot, USER_CHAT, MAX_SPACE
 
