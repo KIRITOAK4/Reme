@@ -98,7 +98,8 @@ async def callback_handler(client, callback_query):
         if data == "sample":
             await handle_sample(client, callback_query, file, replied)
         elif data == "auto_rename":
-            await handle_auto_rename(client, callback_query, file, replied)
+            season, episode, base_name = await extract_season_episode(file.file_name)
+            await handle_auto_rename(client, callback_query, file, replied, season, episode, base_name)
         elif data == "rename":
             await handle_rename(client, callback_query, file, replied)
 
