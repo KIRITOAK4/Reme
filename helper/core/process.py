@@ -4,16 +4,17 @@ import asyncio
 from datetime import datetime
 from pytz import timezone
 from PIL import Image
-
 from pyrogram import Client
-from pyrogram.types import Message
+from pyrogram.types import Message, ForceReply
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 
 from helper.utils import progress_for_pyrogram, convert, humanbytes
+from .metaedit import change_metadata
 from helper.database import db
-from plugins.chatid import get_chat_status
+from .chatid import get_chat_status
 from Krito import ubot, pbot, USER_CHAT, MAX_SPACE
+
 
 async def process_rename(client: Client, original_message: Message, new_name: str):
     try:
@@ -34,7 +35,6 @@ async def process_rename(client: Client, original_message: Message, new_name: st
 
         metadata = await db.get_metadata(original_message.chat.id)
         duration = 0
-
         try:
             meta = extractMetadata(createParser(file_path))
             if meta and meta.has("duration"):
@@ -42,32 +42,108 @@ async def process_rename(client: Client, original_message: Message, new_name: st
         except:
             pass
 
-        updated_path = file_path  # You can modify this if metadata processing is re-added
+        updated_path = file_path
+        await process_final_upload(client, original_message, file, updated_path, new_name, duration, file_path)
 
-        c_caption = await db.get_caption(original_message.chat.id)
-        c_thumb = await db.get_thumbnail(original_message.chat.id)
-        caption = (
-            c_caption.format(filename=new_name, filesize=humanbytes(file.file_size), duration=convert(duration))
-            if c_caption else f"**{new_name}**"
-        )
+    except Exception as e:
+        await original_message.reply_text(f"❌ An error occurred: {e}")
+
+from pyrogram.types import ForceReply
+
+@pbot.on_message(filters.private & filters.reply)
+async def refunc(client: Client, message: Message):
+    reply_message = message.reply_to_message
+    if reply_message and isinstance(reply_message.reply_markup, ForceReply):
+        new_name = message.text
+        await message.delete()
+
+        original = await client.get_messages(message.chat.id, reply_message.id)
+        ori_msg = original.reply_to_message
+        file = getattr(ori_msg, ori_msg.media.value)
+
+        if "." not in new_name:
+            extn = await db.get_exten(message.chat.id) or file.file_name.rsplit(".", 1)[-1]
+            new_name = f"{new_name}.{extn}"
+
+        file_path = f"downloads/{new_name}"
+        updated_path = None
+        thumbnail_path = None
+
+        ms = await message.reply_text("📥 Downloading the file...")
+        try:
+            path = await client.download_media(
+                message=ori_msg, file_name=file_path,
+                progress=progress_for_pyrogram,
+                progress_args=("Downloading...", ms, time.time())
+            )
+        except Exception as e:
+            await ms.edit(f"❌ Download failed: {e}")
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return
+
+        try:
+            meta = extractMetadata(createParser(file_path))
+            duration = meta.get("duration").seconds if meta and meta.has("duration") else 0
+        except Exception as e:
+            await ms.edit(f"❌ Metadata error: {e}")
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return
+
+        metadata = await db.get_metadata(message.chat.id)
+        if file_path.endswith(('.mkv', '.mp4', '.mp3')):
+            if not os.path.exists("Metadata"):
+                os.mkdir("Metadata")
+            updated_path = f"Metadata/{new_name}"
+            metadata_dict = {
+                "video_title": metadata.get("video"),
+                "audio_title": metadata.get("audio"),
+                "subtitle_title": metadata.get("subtitle"),
+                "artist": metadata.get("artist"),
+                "author": metadata.get("author")
+            }
+            updated_path = await change_metadata(file_path, updated_path, metadata_dict, ms)
+            if not updated_path:
+                return
+        else:
+            updated_path = file_path
+            await ms.edit("⏳ File format not supported for metadata change, proceeding with upload ⚡")
+
+        await process_final_upload(client, message, file, updated_path, new_name, duration, file_path)
+
+async def process_final_upload(client, message, file, updated_path, new_name, duration, file_path):
+    try:
+        c_caption = await db.get_caption(message.chat.id)
+        c_thumb = await db.get_thumbnail(message.chat.id)
+
+        if c_caption:
+            try:
+                caption = c_caption.format(
+                    filename=new_name,
+                    filesize=humanbytes(file.file_size),
+                    duration=convert(duration)
+                )
+            except Exception as e:
+                raise Exception(f"Caption formatting error: {e}")
+        else:
+            caption = f"**{new_name}**"
 
         thumbnail_path = None
-        if c_thumb or (file.thumbs and file.thumbs[0].file_id):
+        if file.thumbs or c_thumb:
             try:
                 thumb_id = c_thumb or file.thumbs[0].file_id
                 thumbnail_path = await client.download_media(thumb_id)
                 Image.open(thumbnail_path).convert("RGB").resize((320, 320)).save(thumbnail_path, "JPEG")
-            except:
-                pass
+            except Exception as e:
+                raise Exception(f"Thumbnail error: {e}")
 
-        chat_id, verified = await get_chat_status(original_message.chat.id)
+        chat_id, verified = await get_chat_status(message.chat.id)
         is_big_file = file.file_size > 1.9 * 1024 * 1024 * 1024
         upload_client = ubot if is_big_file else pbot
-        fupload = USER_CHAT if is_big_file else (chat_id if chat_id and verified else original_message.chat.id)
+        fupload = USER_CHAT if is_big_file else (chat_id if chat_id and verified else message.chat.id)
 
-        await ms.edit("📤 Uploading the file...")
-
-        upload_type = await db.get_uploadtype(original_message.chat.id) or "document"
+        upload_type = await db.get_uploadtype(message.chat.id) or "document"
         send_func = {
             "document": upload_client.send_document,
             "video": upload_client.send_video,
@@ -75,55 +151,48 @@ async def process_rename(client: Client, original_message: Message, new_name: st
         }.get(upload_type)
 
         if not send_func:
-            await ms.edit_text("❌ Invalid upload type selected.")
-            return
+            raise Exception("Invalid upload type selected")
 
-        try:
-            kwargs = {
-                "chat_id": fupload,
-                "caption": caption,
-                "thumb": thumbnail_path,
-                "progress": progress_for_pyrogram,
-                "progress_args": ("Uploading...", ms, time.time()),
-            }
+        ms = await message.reply_text("📤 Uploading the file...")
 
-            if upload_type == "document":
-                kwargs["document"] = updated_path
-            elif upload_type == "video":
-                kwargs["video"] = updated_path
-                kwargs["duration"] = duration
-            elif upload_type == "audio":
-                kwargs["audio"] = updated_path
-                kwargs["duration"] = duration
+        kwargs = {
+            "chat_id": fupload,
+            "caption": caption,
+            "thumb": thumbnail_path,
+            "progress": progress_for_pyrogram,
+            "progress_args": ("Uploading...", ms, time.time()),
+        }
 
-            suc = await send_func(**kwargs)
+        if upload_type == "document":
+            kwargs["document"] = updated_path
+        elif upload_type == "video":
+            kwargs["video"] = updated_path
+            kwargs["duration"] = duration
+        elif upload_type == "audio":
+            kwargs["audio"] = updated_path
+            kwargs["duration"] = duration
 
-            if upload_client == ubot:
-                await pbot.copy_message(
-                    chat_id=chat_id if chat_id and verified else original_message.chat.id,
-                    from_chat_id=suc.chat.id,
-                    message_id=suc.message_id
-                )
+        suc = await send_func(**kwargs)
 
-        except Exception as e:
-            await ms.edit(f"❌ Upload error: {e}")
-            return
+        if upload_client == ubot:
+            await pbot.copy_message(
+                chat_id=chat_id if chat_id and verified else message.chat.id,
+                from_chat_id=suc.chat.id,
+                message_id=suc.message_id
+            )
 
-        # Update space
         IST = timezone("Asia/Kolkata")
-        current_space_used = await db.get_space_used(original_message.chat.id)
-        await db.set_space_used(original_message.chat.id, current_space_used + file.file_size)
-        updated_space = await db.get_space_used(original_message.chat.id)
-        if updated_space > MAX_SPACE:
-            await db.set_filled_time(original_message.chat.id, datetime.now(IST).isoformat())
+        used = await db.get_space_used(message.chat.id)
+        await db.set_space_used(message.chat.id, used + file.file_size)
+
+        if used + file.file_size > MAX_SPACE:
+            await db.set_filled_time(message.chat.id, datetime.now(IST).isoformat())
 
         await ms.delete()
 
-    except Exception as e:
-        await original_message.reply_text(f"❌ An error occurred: {e}")
-
     finally:
-        # Clean up files even if errors occur
+        if os.path.exists(updated_path):
+            os.remove(updated_path)
         if os.path.exists(file_path):
             os.remove(file_path)
         if 'thumbnail_path' in locals() and thumbnail_path and os.path.exists(thumbnail_path):
