@@ -52,7 +52,7 @@ async def start_clients():
             time = curr.strftime('%I:%M:%S %p')
             await pbot.send_message(
                 LOG_CHANNEL,
-                f"**🔄 ʀᴇꜱᴛᴀʀᴛ ʀᴇᴘᴏʀᴛ**\n\n📅 ᴅᴀᴛᴇ: `{date}`\n⏰ ᴛɪᴍᴇ: `{time}`\n🌍 ᴛɪᴍᴇᴢᴏɴᴇ: `Asia/Kolkata`\n💾 ᴠᴇʀꜱɪᴏɴ: `v{__version__} (Layer {layer})`"
+                f"**🔄 {me.mention} ꜱᴛᴀᴛᴜꜱ \n\n ʀᴇꜱᴛᴀʀᴛ ʀᴇᴘᴏʀᴛ**\n\n📅 ᴅᴀᴛᴇ: `{date}`\n⏰ ᴛɪᴍᴇ: `{time}`\n🌍 ᴛɪᴍᴇᴢᴏɴᴇ: `Asia/Kolkata`\n💾 ᴠᴇʀꜱɪᴏɴ: `v{__version__} (Layer {layer})`"
             )
         except Exception as e:
             logger.warning(f"⚠️ *𝐋𝐎𝐆 𝐂𝐇𝐀𝐍𝐍𝐄𝐋 𝐅𝐀𝐈𝐋*: {e}")
