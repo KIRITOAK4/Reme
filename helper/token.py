@@ -1,12 +1,12 @@
 import os
 import asyncio
 import uuid
+import aiohttp
 from datetime import datetime, timedelta
 from pytz import timezone
 from pyrogram import filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from helper.database import db
-from urllib.parse import quote
 from Krito import BOT_NAME, ADMIN, TOKEN_TIMEOUT, SP_USERS, TUTORIAL_URL, SHORT_URL, MAX_SPACE, pbot
 from shortener import shorten_url
 
@@ -21,10 +21,21 @@ def get_last_reset_time(token_timeout):
         reset_time -= timedelta(days=1)
     return reset_time
 
-def generate_buttons(new_token):
-    final_url=shorten_url(f'https://telegram.me/{BOT_NAME}?start={new_token}')
-    vercel_url = f"https://validate-user-iota.vercel.app/?token={new_token}&target={quote(final_url)}"
-    
+async def generate_buttons(new_token):
+    final_url = shorten_url(f'https://telegram.me/{BOT_NAME}?start={new_token}')
+    quiz_token = None
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post("https://validate-user-iota.vercel.app/api/store-token", json={"url": final_url}) as resp:
+                data = await resp.json()
+                quiz_token = data.get("token")
+    except Exception as e:
+        print(f"[generate_buttons] Failed to get quiz_token: {e}")
+
+    # Fallback to raw new_token if vercel fails
+    vercel_token = quiz_token if quiz_token else final_url
+    vercel_url = f"https://validate-user-iota.vercel.app/?token={vercel_token}"
+
     buttons = []
     if TUTORIAL_URL:
         buttons.append([InlineKeyboardButton(text='📘 Tutorial', url=TUTORIAL_URL)])
@@ -33,7 +44,7 @@ def generate_buttons(new_token):
     buttons.append([
         InlineKeyboardButton(text='🔄 Refresh Token', url=vercel_url),
     ])
-    return buttons  
+    return buttons
 
 async def validate_user(message, button=None):
     try:
