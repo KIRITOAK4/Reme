@@ -14,6 +14,7 @@ from helper.core.rename_function import handle_sample, handle_auto_rename, handl
 from helper.core.process import handle_metadata_info
 from Krito import ubot, pbot
 
+
 async def extract_season_episode(filename):
     season, episode = None, None
     pattern1 = re.compile(r'[\[\(\{\<]?\s*S(\d+)(?:E|EP)(\d+)\s*[\]\)\}\>]?', re.IGNORECASE)
@@ -45,6 +46,7 @@ async def extract_season_episode(filename):
     cleaned_filename = re.sub(r"[\s._-]+$", "", cleaned_filename).strip()
     base_name, _ = os.path.splitext(cleaned_filename)
     return season, episode, base_name
+
 
 @pbot.on_message(filters.private & (filters.document | filters.audio | filters.video))
 async def rename_start(client, message):
@@ -78,7 +80,8 @@ async def rename_start(client, message):
         await asyncio.sleep(e.value)
         await message.reply_text(text=text, reply_to_message_id=message.id, reply_markup=InlineKeyboardMarkup(buttons))
 
-@pbot.on_callback_query(filters.regex(r"^(rename|sample|auto_rename)"))
+
+@pbot.on_callback_query(filters.regex(r"^(rename|sample|auto_rename|metadata_info)"))
 async def callback_handler(client, callback_query):
     """Routes callback data to the appropriate handler."""
     try:
@@ -105,9 +108,10 @@ async def callback_handler(client, callback_query):
         elif data == "rename":
             await handle_rename(client, callback_query, file, replied)
         elif data == "metadata_info":
-    await handle_metadata_info(client, callback_query, replied)
+            await handle_metadata_info(client, callback_query, replied)
 
     except FloodWait as e:
         await asyncio.sleep(e.value)
     except Exception as e:
-        await callback_query.message.reply_text(f"❌ Callback error: {e}")
+        await callback_query.message.reply_text(f"❌ Callback error in `{callback_query.data}`: {e}")
+        
