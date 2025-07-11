@@ -36,7 +36,7 @@ MAX_PAGE = int(os.environ.get("MAX_PAGE", 4))
 # -------------------------------URLS AND SHORTENER------------------------
 TUTORIAL_URL = os.environ.get("TUTORIAL_URL", "")
 SHORT_URL = os.environ.get("SHORT_URL", "")
-SHORTEN_KEY = os.environ.get("SHORTEN_KEY", "atglinks.com ea08e13411f489f3e84f9bdac81c7e2024f01a82")
+SHORTEN_KEY = os.environ.get("SHORTEN_KEY", "atglinks.com ea08e13411f489f3e84f9bdac81c7e2024f01a82, shrinkme.io 10274e434e87cdc40c826abca429b8aa1ff1b90c")
 
 # -------------------------------LOGGING AND WEBHOOK----------------------
 LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", -1001682783965))
