@@ -256,7 +256,7 @@ async def force_add_multiple_fields(client, message: Message):
         # ✅ Only set filled_at if space_used > MAX_SPACE
         if 'space_used' in update_data and isinstance(update_data['space_used'], (int, float)):
             if update_data['space_used'] > MAX_SPACE:
-                update_data['filled_at'] = datetime.now(IST).isoformat()
+                update_data['filled_at'] = datetime.datetime.now(IST).isoformat()
 
         await db.col.update_one({"_id": user_id}, {"$set": update_data})
         await message.reply_text(f"✅ Updated user `{user_id}` with fields:\n```json\n{update_data}\n```")
