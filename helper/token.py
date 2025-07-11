@@ -21,13 +21,16 @@ def get_last_reset_time(token_timeout):
     return reset_time
 
 def generate_buttons(new_token):
+    final_url=shorten_url(f'https://telegram.me/{BOT_NAME}?start={new_token}')
+    vercel_url = f"https://validate-user-iota.vercel.app/?token={new_token}&target={quote(final_url)}"
+    
     buttons = []
     if TUTORIAL_URL:
         buttons.append([InlineKeyboardButton(text='📘 Tutorial', url=TUTORIAL_URL)])
     if SHORT_URL:
         buttons.append([InlineKeyboardButton(text='🔗 URL', url=SHORT_URL)])
     buttons.append([
-        InlineKeyboardButton(text='🔄 Refresh Token', url=shorten_url(f'https://telegram.me/{BOT_NAME}?start={new_token}')),
+        InlineKeyboardButton(text='🔄 Refresh Token', url=vercel_url),
     ])
     return buttons  
 
