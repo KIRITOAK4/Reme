@@ -11,7 +11,7 @@ from pyrogram.types import Message
 from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, PeerIdInvalid
 from helper.database import db
 from helper.utils import humanbytes, split_and_send_message
-from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME
+from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME, MAX_SPACE
 from Krito.txt import Txt
 
 # === LOGGER ===
@@ -206,6 +206,7 @@ async def send_msg(user_id, message):
         return 500
 
 # ==================== /fadd ====================
+
 @pbot.on_message(filters.command("fadd"))
 async def force_add_multiple_fields(client, message: Message):
     if message.from_user.id not in ADMIN:
@@ -246,16 +247,20 @@ async def force_add_multiple_fields(client, message: Message):
                         val = int(val)
                 except:
                     pass
-
             update_data[key] = val
 
         user = await db.col.find_one({"_id": user_id})
         if not user:
             return await message.reply_text("❌ User not found in database.", quote=True)
 
+        # ✅ Only set filled_at if space_used > MAX_SPACE
+        if 'space_used' in update_data and isinstance(update_data['space_used'], (int, float)):
+            if update_data['space_used'] > MAX_SPACE:
+                update_data['filled_at'] = datetime.now(IST).isoformat()
+
         await db.col.update_one({"_id": user_id}, {"$set": update_data})
         await message.reply_text(f"✅ Updated user `{user_id}` with fields:\n```json\n{update_data}\n```")
+
     except Exception as e:
         await message.reply_text(f"⚠️ Error: `{e}`")
         
-                
