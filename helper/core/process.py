@@ -159,7 +159,7 @@ async def refunc(client: Client, message: Message):
             updated_path = file_path
             await ms.edit("⏳ File format not supported for metadata change, proceeding with upload ⚡")
 
-        await process_final_upload(client, message, file, updated_path, new_name, duration, file_path)
+        await process_final_upload(client, message, file, updated_path, new_name, duration, file_path, ms)
 
 async def process_final_upload(client, message, file, updated_path, new_name, duration, file_path, ms):
     try:
