@@ -102,7 +102,7 @@ async def refunc(client: Client, message: Message):
     if reply_message and isinstance(reply_message.reply_markup, ForceReply):
         new_name = message.text
         await message.delete()
-        await reply_message.delete()
+        
         original = await client.get_messages(message.chat.id, reply_message.id)
         ori_msg = original.reply_to_message
         file = getattr(ori_msg, ori_msg.media.value)
@@ -112,9 +112,7 @@ async def refunc(client: Client, message: Message):
             new_name = f"{new_name}.{extn}"
 
         file_path = f"downloads/{new_name}"
-        updated_path = None
-        thumbnail_path = None
-
+        await reply_message.delete()
         ms = await message.reply_text("📥 Downloading the file...")
         try:
             path = await client.download_media(
