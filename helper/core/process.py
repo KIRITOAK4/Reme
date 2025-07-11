@@ -102,7 +102,7 @@ async def refunc(client: Client, message: Message):
     if reply_message and isinstance(reply_message.reply_markup, ForceReply):
         new_name = message.text
         await message.delete()
-
+        await reply_message.delete()
         original = await client.get_messages(message.chat.id, reply_message.id)
         ori_msg = original.reply_to_message
         file = getattr(ori_msg, ori_msg.media.value)
