@@ -15,58 +15,54 @@ from helper.database import db
 from plugins.chatid import get_chat_status
 from Krito import ubot, pbot, USER_CHAT, MAX_SPACE
 
-async def handle_metadata_info(client, cb, original_msg):
-    media = getattr(original_msg, original_msg.media.value, None)
-    if not media or not media.file_name:
-        await cb.answer("Invalid or missing media file.", show_alert=True)
-        return
-
-    file_path = f"downloads/{media.file_name}"
-    status = await cb.message.reply_text("📥 Downloading for metadata...")
-
+async def handle_metadata_info(client, cb: CallbackQuery, replied_msg):
+    txt_path = None
     try:
-        path = await client.download_media(
-            original_msg,
-            file_name=file_path,
-            progress=progress_for_pyrogram,
-            progress_args=("Downloading...", status, time.time())
-        )
-    except Exception as e:
-        await status.edit(f"❌ Download failed: {e}")
-        return
-
-    try:
-        parser = createParser(path)
-        metadata = extractMetadata(parser)
-        if not metadata:
-            await status.edit("❌ Could not extract metadata.")
+        media = getattr(replied_msg, replied_msg.media.value, None)
+        if not media or not media.file_name:
+            await cb.answer("❌ Invalid media or missing filename.", show_alert=True)
             return
 
-        text_info = "\n".join(f"{item.key}: {item.value}" for item in metadata.exportPlaintext())
-        txt_filename = f"{os.path.splitext(media.file_name)[0]}_metadata.txt"
-        txt_path = f"downloads/{txt_filename}"
+        # Download file
+        msg = await cb.message.reply_text("📥 Downloading file for metadata...")
+        file_path = f"downloads/{media.file_name}"
+
+        path = await client.download_media(
+            message=replied_msg,
+            file_name=file_path,
+            progress=progress_for_pyrogram,
+            progress_args=("Downloading...", msg, time.time())
+        )
+
+        # Extract metadata
+        parser = createParser(file_path)
+        metadata = extractMetadata(parser)
+        if not metadata:
+            await msg.edit("❌ Failed to extract metadata.")
+            return
+
+        lines = metadata.exportPlaintext()  # Safe list of readable metadata lines
+        txt_path = f"downloads/{os.path.splitext(media.file_name)[0]}_metadata.txt"
 
         with open(txt_path, "w", encoding="utf-8") as f:
-            f.write(text_info)
-
-        await status.edit("📤 Uploading metadata info...")
+            f.write("\n".join(lines))
 
         await client.send_document(
             chat_id=cb.message.chat.id,
             document=txt_path,
-            caption=f"📄 Metadata info for `{media.file_name}`",
-            progress=progress_for_pyrogram,
-            progress_args=("Uploading...", status, time.time())
+            caption="📄 Metadata Info"
         )
-        await status.delete()
+        await msg.delete()
 
     except Exception as e:
-        await status.edit(f"❌ Metadata error: {e}")
+        await cb.message.reply_text(f"❌ Metadata error: {e}")
 
     finally:
-        for path in [file_path, txt_path]:
-            if os.path.exists(path):
-                os.remove(path)
+        # Clean up
+        if txt_path and os.path.exists(txt_path):
+            os.remove(txt_path)
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
 async def process_rename(client: Client, original_message: Message, new_name: str):
     try:
