@@ -30,7 +30,7 @@ DB_URL = os.environ.get("DB_URL", "mongodb+srv://RENAME2:RENAME2@cluster0.grqnvb
 # -------------------------------OPERATIONAL CONFIGURATION------------------
 SP_USERS = [int(sp_users) if id_pattern.search(sp_users) else sp_users for sp_users in os.environ.get('SP_USERS', '2009088107').split()]
 MAX_SPACE = int(os.environ.get("MAX_SPACE", 104857600))
-TOKEN_TIMEOUT = os.environ.get("TOKEN_TIMEOUT", "None")
+TOKEN_TIMEOUT = os.environ.get("TOKEN_TIMEOUT", 09:10)
 MAX_PAGE = int(os.environ.get("MAX_PAGE", 4))
 
 # -------------------------------URLS AND SHORTENER------------------------
