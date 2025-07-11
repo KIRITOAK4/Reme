@@ -5,7 +5,7 @@ from datetime import datetime
 from pytz import timezone
 from PIL import Image
 from pyrogram import Client, filters
-from pyrogram.types import Message, ForceReply
+from pyrogram.types import Message, ForceReply, CallbackQuery
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 
