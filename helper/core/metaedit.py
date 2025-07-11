@@ -43,9 +43,7 @@ async def change_metadata(input_path, output_path, metadata, ms):
             await ms.edit("✅ Metadata added successfully.")
             return output_path
         else:
-            await ms.edit("❌ Metadata addition failed.")
-            return None
-
+            raise Exception("Failed to add metadata")
     except Exception as e:
         await ms.reply_text(f"❌ Error adding metadata: `{e}`")
         return None
