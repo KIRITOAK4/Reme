@@ -70,12 +70,16 @@ async def validate_user(message, button=None):
 
 async def check_user_limit(user_id):
     filled_time = await db.get_filled_time(user_id)
+    print(f"[check_user_limit] filled_time from DB: {filled_time}")
     if filled_time:
         filled_dt = datetime.fromisoformat(filled_time).astimezone(IST)
+        now_dt = datetime.now(IST)
+        print(f"[check_user_limit] filled_dt: {filled_dt}, now: {now_dt}")
         # Optional 24-hour lockout (commented out)
         # if datetime.now(IST) - filled_dt < timedelta(days=1):
         #     return False
-        if filled_dt.date() == datetime.now(IST).date():
+        if filled_dt.date() == now_dt.date():
+            print(f"[check_user_limit] LIMIT HIT. Blocking user {user_id}")
             return False
         await db.reset_filled_time(user_id)
         await db.set_space_used(user_id, 0)
