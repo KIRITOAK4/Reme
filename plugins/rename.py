@@ -10,7 +10,8 @@ from helper.utils import humanbytes
 from helper.database import db
 from helper.token import validate_user, check_user_limit
 from .chatid import get_chat_status
-from helper.core.rename_function import handle_sample, handle_auto_rename, handle_rename, handle_metadata_info
+from helper.core.rename_function import handle_sample, handle_auto_rename, handle_rename
+from helper.core.process import handle_metadata_info
 from Krito import ubot, pbot
 
 async def extract_season_episode(filename):
