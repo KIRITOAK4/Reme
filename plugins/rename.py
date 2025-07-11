@@ -10,7 +10,7 @@ from helper.utils import humanbytes
 from helper.database import db
 from helper.token import validate_user, check_user_limit
 from .chatid import get_chat_status
-from helper.core.rename_function import handle_sample, handle_auto_rename, handle_rename
+from helper.core.rename_function import handle_sample, handle_auto_rename, handle_rename, handle_metadata_info
 from Krito import ubot, pbot
 
 async def extract_season_episode(filename):
@@ -66,7 +66,8 @@ async def rename_start(client, message):
         buttons = [
             [InlineKeyboardButton("📝 𝚂𝚃𝙰𝚁𝚃 𝚁𝙴𝙽𝙰𝙼𝙴 📝", callback_data="rename"),
              InlineKeyboardButton("🔄 𝙰𝚄𝚃𝙾 𝚁𝙴𝙽𝙰𝙼𝙴 🔄", callback_data="auto_rename")],
-            [InlineKeyboardButton("📋 𝚂𝙰𝙼𝙿𝙻𝙴 📋", callback_data="sample")]
+            [InlineKeyboardButton("📋 𝚂𝙰𝙼𝙿𝙻𝙴 📋", callback_data="sample"),
+             InlineKeyboardButton("ℹ️ 𝙼𝙴𝚃𝙰𝙳𝙰𝚃𝙰 ℹ️", callback_data="metadata_info")]
         ]
 
         await message.reply_text(text=text, reply_to_message_id=message.id, reply_markup=InlineKeyboardMarkup(buttons))
@@ -102,6 +103,8 @@ async def callback_handler(client, callback_query):
             await handle_auto_rename(client, callback_query, file, replied, season, episode, base_name)
         elif data == "rename":
             await handle_rename(client, callback_query, file, replied)
+        elif data == "metadata_info":
+    await handle_metadata_info(client, callback_query, replied)
 
     except FloodWait as e:
         await asyncio.sleep(e.value)
