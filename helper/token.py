@@ -26,7 +26,7 @@ async def generate_buttons(new_token):
     quiz_token = None
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post("https://validate-user-iota.vercel.app/api/store-token", json={"url": final_url}) as resp:
+            async with session.post("https://validate-user-tan.vercel.app//api/store-token", json={"url": final_url}) as resp:
                 data = await resp.json()
                 quiz_token = data.get("token")
     except Exception as e:
