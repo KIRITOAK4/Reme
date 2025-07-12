@@ -73,7 +73,7 @@ async def validate_user(message, button=None):
             await db.set_token(userid, new_token)
 
             if button is None:
-                button = generate_buttons(new_token)
+                button = await generate_buttons(new_token)
 
             error_msg = '⚠️ Your token has expired. Please refresh your token to continue.'
             return error_msg, button
