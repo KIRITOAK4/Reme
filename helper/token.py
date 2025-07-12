@@ -23,26 +23,37 @@ def get_last_reset_time(token_timeout):
 
 async def generate_buttons(new_token):
     final_url = shorten_url(f'https://telegram.me/{BOT_NAME}?start={new_token}')
+    print(f"[generate_buttons] Generated short URL: {final_url}")
+    
     quiz_token = None
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post("https://validate-user-tan.vercel.app//api/store-token", json={"url": final_url}) as resp:
+            print("[generate_buttons] Sending POST request to Vercel with URL...")
+            async with session.post("https://validate-user-tan.vercel.app/api/store-token", json={"url": final_url}) as resp:
+                print(f"[generate_buttons] Vercel response status: {resp.status}")
                 data = await resp.json()
+                print(f"[generate_buttons] Response JSON: {data}")
                 quiz_token = data.get("token")
     except Exception as e:
         print(f"[generate_buttons] Failed to get quiz_token: {e}")
 
     # Fallback to raw new_token if vercel fails
     if quiz_token:
-        vercel_url = f"https://validate-user-iota.vercel.app/?token={quiz_token}"
+        vercel_url = f"https://validate-user-tan.vercel.app/?token={quiz_token}"
+        print(f"[generate_buttons] Using quiz_token: {quiz_token}")
     else:
-        vercel_url = final_url  # fallback directly to the short URL
+        vercel_url = final_url
+        print("[generate_buttons] Falling back to final_url for refresh button.")
 
     buttons = []
     if TUTORIAL_URL:
+        print("[generate_buttons] Adding Tutorial button")
         buttons.append([InlineKeyboardButton(text='📘 Tutorial', url=TUTORIAL_URL)])
     if SHORT_URL:
+        print("[generate_buttons] Adding URL button")
         buttons.append([InlineKeyboardButton(text='🔗 URL', url=SHORT_URL)])
+    
+    print(f"[generate_buttons] Final Refresh URL: {vercel_url}")
     buttons.append([
         InlineKeyboardButton(text='🔄 Refresh Token', url=vercel_url),
     ])
