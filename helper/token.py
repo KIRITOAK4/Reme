@@ -36,7 +36,7 @@ async def generate_buttons(new_token):
     if quiz_token:
         vercel_url = f"https://validate-user-iota.vercel.app/?token={quiz_token}"
     else:
-        vercel_url = final_short_url  # fallback directly to the short URL
+        vercel_url = final_url  # fallback directly to the short URL
 
     buttons = []
     if TUTORIAL_URL:
