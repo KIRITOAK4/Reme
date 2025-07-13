@@ -8,7 +8,7 @@ from pyrogram.types import InlineKeyboardButton
 logging.basicConfig(level=logging.INFO, filename="function_error.log")
 logger = logging.getLogger("GifHandler")
 
-# Function to get a random GIF from the 'gif' directory
+# ✅ Your original version preserved
 def get_page_gif():
     try:
         gif_files = os.listdir("./gif")
@@ -19,32 +19,33 @@ def get_page_gif():
         logger.error(f"Error in get_page_gif: {e}")
         return None
 
-# Function to format caption text
+# ✅ Optimized caption function
 def get_page_caption(page_number, first_name, last_name, mention, username, id):
     try:
-        text_templates = {1: Text, 2: Text1, 3: Text2, 4: Text3}
-        page_text = text_templates.get(page_number, Text)
-        mention = f"[{first_name}](tg://user?id={id})"
+        templates = {1: Text, 2: Text1, 3: Text2, 4: Text3}
+        template = templates.get(page_number, Text)
+        mention_text = f"[{first_name}](tg://user?id={id})"
         username_text = f"@{username}" if username else ""
-        return page_text.format(
-            first_name=first_name, last_name=last_name, username=username_text, mention=mention, id=id
+        return template.format(
+            first_name=first_name,
+            last_name=last_name or "",
+            username=username_text,
+            mention=mention_text,
+            id=id
         )
     except Exception as e:
         logger.error(f"Error in get_page_caption: {e}")
-        return None
+        return "⚠️ Unable to generate caption."
 
-# Function to generate inline keyboard
+# ✅ Optimized inline keyboard
 def get_inline_keyboard(page_number):
     try:
-        inline_keyboard = []
         row = []
         if page_number > 1:
             row.append(InlineKeyboardButton("👈", callback_data="previous"))
         if page_number < MAX_PAGE:
             row.append(InlineKeyboardButton("👉", callback_data="next"))
-        inline_keyboard.append(row)
-        return inline_keyboard
+        return [row] if row else []
     except Exception as e:
-        logger.error(f"An error occurred in get_inline_keyboard: {e}")
-        return None
-    
+        logger.error(f"Error in get_inline_keyboard: {e}")
+        return []
