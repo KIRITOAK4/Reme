@@ -41,10 +41,9 @@ async def settings_menu(client, message):
 
 @pbot.on_callback_query(filters.regex(r"settings_menu"))
 async def settings_menu_callback(client, callback_query):
-    await callback_query.answer()
-    await render_settings_menu(client, callback_query.message, edit=True)
+    await render_settings_menu(client, callback_query.message)
 
-async def render_settings_menu(client, message, edit=False):
+async def render_settings_menu(client, message):
     user_id = message.from_user.id
     template = await db.get_template(user_id)
     upload_type = await db.get_uploadtype(user_id)
@@ -81,29 +80,19 @@ async def render_settings_menu(client, message, edit=False):
         ("Delete Settings", "settings_delete")
     ])
 
-    if edit:
-        if thumbnail:
-            await message.edit_media(InputMediaPhoto(thumbnail))
-            await message.edit_caption(caption=caption, reply_markup=buttons)
-        else:
-            await message.edit_media(InputMediaAnimation(random_gif))
-            await message.edit_caption(caption=caption, reply_markup=buttons)
+    if thumbnail:
+        await message.reply_photo(photo=thumbnail, caption=caption, reply_markup=buttons)
     else:
-        if thumbnail:
-            await message.reply_photo(photo=thumbnail, caption=caption, reply_markup=buttons)
-        else:
-            await message.reply_animation(animation=random_gif, caption=caption, reply_markup=buttons)
+        await message.reply_animation(animation=random_gif, caption=caption, reply_markup=buttons)
 
 # ---------------- BUTTON SELECTORS ----------------
 
 @pbot.on_callback_query(filters.regex("settings_set_template"))
 async def open_template_selector(client, cq):
-    await cq.answer()
     await show_template_selector(client, cq, 0)
 
 @pbot.on_callback_query(filters.regex("template_select_(\\d+)"))
 async def show_template_selector(client, cq, index=None):
-    await cq.answer()
     i = int(cq.matches[0].group(1)) if index is None else index
     prev_i, next_i = (i - 1) % len(TEMPLATES), (i + 1) % len(TEMPLATES)
     buttons = InlineKeyboardMarkup([
@@ -116,19 +105,17 @@ async def show_template_selector(client, cq, index=None):
 
 @pbot.on_callback_query(filters.regex("template_set_(\\d+)"))
 async def set_template(client, cq):
-    await cq.answer("✅ Template updated!")
     i = int(cq.matches[0].group(1))
     await db.set_template(cq.from_user.id, TEMPLATES[i])
+    await cq.message.edit_text("✅ Template updated!")
     await settings_menu_callback(client, cq)
 
 @pbot.on_callback_query(filters.regex("settings_upload_option"))
 async def open_upload_selector(client, cq):
-    await cq.answer()
     await show_upload_selector(client, cq, 0)
 
 @pbot.on_callback_query(filters.regex("upload_select_(\\d+)"))
 async def show_upload_selector(client, cq, index=None):
-    await cq.answer()
     i = int(cq.matches[0].group(1)) if index is None else index
     prev_i, next_i = (i - 1) % len(UPLOAD_MODES), (i + 1) % len(UPLOAD_MODES)
     buttons = InlineKeyboardMarkup([
@@ -141,19 +128,17 @@ async def show_upload_selector(client, cq, index=None):
 
 @pbot.on_callback_query(filters.regex("upload_set_(\\d+)"))
 async def set_upload_mode(client, cq):
-    await cq.answer("✅ Upload mode updated!")
     i = int(cq.matches[0].group(1))
     await db.set_uploadtype(cq.from_user.id, UPLOAD_MODES[i])
+    await cq.message.edit_text("✅ Upload mode updated!")
     await settings_menu_callback(client, cq)
 
 @pbot.on_callback_query(filters.regex("settings_set_extension"))
 async def open_extension_selector(client, cq):
-    await cq.answer()
     await show_extension_selector(client, cq, 0)
 
 @pbot.on_callback_query(filters.regex("exten_select_(\\d+)"))
 async def show_extension_selector(client, cq, index=None):
-    await cq.answer()
     i = int(cq.matches[0].group(1)) if index is None else index
     prev_i, next_i = (i - 1) % len(EXTENSIONS), (i + 1) % len(EXTENSIONS)
     buttons = InlineKeyboardMarkup([
@@ -166,19 +151,17 @@ async def show_extension_selector(client, cq, index=None):
 
 @pbot.on_callback_query(filters.regex("exten_set_(\\d+)"))
 async def set_extension(client, cq):
-    await cq.answer("✅ Extension updated!")
     i = int(cq.matches[0].group(1))
     await db.set_exten(cq.from_user.id, EXTENSIONS[i])
+    await cq.message.edit_text("✅ Extension updated!")
     await settings_menu_callback(client, cq)
 
 @pbot.on_callback_query(filters.regex("settings_sample_button"))
 async def open_sample_selector(client, cq):
-    await cq.answer()
     await show_sample_selector(client, cq, 0)
 
 @pbot.on_callback_query(filters.regex("sample_select_(\\d+)"))
 async def show_sample_selector(client, cq, index=None):
-    await cq.answer()
     i = int(cq.matches[0].group(1)) if index is None else index
     prev_i, next_i = (i - 1) % len(SAMPLE_VALUES), (i + 1) % len(SAMPLE_VALUES)
     buttons = InlineKeyboardMarkup([
@@ -191,16 +174,15 @@ async def show_sample_selector(client, cq, index=None):
 
 @pbot.on_callback_query(filters.regex("sample_set_(\\d+)"))
 async def set_sample_value(client, cq):
-    await cq.answer("✅ Sample value updated!")
     i = int(cq.matches[0].group(1))
     await db.set_sample_value(cq.from_user.id, SAMPLE_VALUES[i])
+    await cq.message.edit_text("✅ Sample value updated!")
     await settings_menu_callback(client, cq)
 
 # ---------------- CAPTION & THUMBNAIL ----------------
 
 @pbot.on_callback_query(filters.regex("settings_set_caption"))
 async def ask_caption(client, cq):
-    await cq.answer()
     await cq.message.edit_text(
         "Send me the new caption to save.\n\nAvailable vars:\n{filename}\n{duration}\n{filesize}",
         reply_markup=generate_buttons([("Back", "settings_menu")])
@@ -208,7 +190,6 @@ async def ask_caption(client, cq):
 
 @pbot.on_callback_query(filters.regex("settings_set_thumbnail"))
 async def ask_thumbnail(client, cq):
-    await cq.answer()
     await cq.message.edit_text(
         "Send me the new thumbnail (as an image).",
         reply_markup=generate_buttons([("Back", "settings_menu")])
@@ -244,7 +225,6 @@ async def handle_caption_or_thumbnail_reply(client, message):
 
 @pbot.on_callback_query(filters.regex("settings_toggle_metadata"))
 async def metadata_toggle(client, cq):
-    await cq.answer()
     buttons = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("Title", "set_metadata_title"),
@@ -281,7 +261,6 @@ async def metadata_toggle(client, cq):
 
 @pbot.on_callback_query(filters.regex("set_metadata_(title|artist|audio|video|author|subtitle)"))
 async def ask_metadata_field(client, cq):
-    await cq.answer()
     field = cq.data.split("_")[-1]
     await cq.message.edit_text(METADATA_KEYS[field], reply_markup=generate_buttons([("Back", "settings_toggle_metadata")]))
 
@@ -289,7 +268,6 @@ async def ask_metadata_field(client, cq):
 
 @pbot.on_callback_query(filters.regex("settings_delete"))
 async def delete_menu(client, cq):
-    await cq.answer()
     buttons = generate_buttons([
         ("Delete Caption", "delete_caption"),
         ("Delete Thumbnail", "delete_thumbnail"),
@@ -301,33 +279,32 @@ async def delete_menu(client, cq):
 
 @pbot.on_callback_query(filters.regex("delete_caption"))
 async def delete_caption(client, cq):
-    await cq.answer("❌ Caption reset.")
     await db.set_caption(cq.from_user.id, None)
+    await cq.message.edit_text("❌ Caption reset.")
     await settings_menu_callback(client, cq)
 
 @pbot.on_callback_query(filters.regex("delete_thumbnail"))
 async def delete_thumbnail(client, cq):
-    await cq.answer("❌ Thumbnail reset.")
     await db.set_thumbnail(cq.from_user.id, None)
+    await cq.message.edit_text("❌ Thumbnail reset.")
     await settings_menu_callback(client, cq)
 
 @pbot.on_callback_query(filters.regex("delete_metadata"))
 async def delete_metadata(client, cq):
-    await cq.answer("❌ Metadata reset.")
     default = {key: "t.me/devil_testing_bot" for key in METADATA_KEYS}
     await db.set_metadata(cq.from_user.id, default)
+    await cq.message.edit_text("❌ Metadata reset.")
     await settings_menu_callback(client, cq)
 
 @pbot.on_callback_query(filters.regex("delete_chatid"))
 async def delete_chatid(client, cq):
-    await cq.answer("✅ Chat ID deleted.")
     user_id = cq.from_user.id
     base_dir.pop(user_id, None)
+    await cq.message.edit_text("✅ Chat ID deleted.")
     await settings_menu_callback(client, cq)
 
 @pbot.on_callback_query(filters.regex(r"delete_metadata_(title|artist|audio|video|author|subtitle)"))
 async def delete_individual_metadata(client, cq):
-    await cq.answer()
     user_id = cq.from_user.id
     field = cq.matches[0].group(1)
     metadata = await db.get_metadata(user_id)
@@ -338,8 +315,8 @@ async def delete_individual_metadata(client, cq):
     
 @pbot.on_callback_query(filters.regex("delete_metadata_all"))
 async def delete_metadata_all(client, cq):
-    await cq.answer("✅ All metadata fields have been reset to default.")
     user_id = cq.from_user.id
     default = {key: "t.me/devil_testing_bot" for key in METADATA_KEYS}
     await db.set_metadata(user_id, default)
+    await cq.message.edit_text("✅ All metadata fields have been reset to default.")
     await metadata_toggle(client, cq)
