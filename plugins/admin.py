@@ -11,14 +11,47 @@ from pyrogram.types import Message
 from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, PeerIdInvalid
 from helper.database import db
 from helper.utils import humanbytes, split_and_send_message
-from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME, MAX_SPACE
+from Krito import pbot, ADMIN, LOG_CHANNEL, BOT_UPTIME, MAX_SPACE, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN
 from Krito.txt import Txt
+import aiohttp
 
 # === LOGGER ===
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 IST = timezone("Asia/Kolkata")
+
+# ==================== /bypass command ====================
+@pbot.on_message(filters.command("bypass"))
+async def bypass_token(client, message: Message):
+    if message.from_user.id not in ADMIN:
+        return await message.reply_text("🛑 Whom do you think you are?", reply_to_message_id=message.id)
+
+    args = message.text.strip().split()
+    if len(args) != 2:
+        return await message.reply_text("⚠️ Usage: /bypass <vercel_url_with_token>")
+
+    token_url = args[1]
+    if "token=" not in token_url:
+        return await message.reply_text("❌ Invalid URL. Make sure it contains `token=`.")
+
+    token = token_url.split("token=")[-1].strip()
+    if not token:
+        return await message.reply_text("❌ Token not found in URL.")
+
+    try:
+        redis_url = f"{UPSTASH_REDIS_URL}/get/{token}"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(redis_url, headers={"Authorization": f"Bearer {UPSTASH_REDIS_TOKEN}"}) as resp:
+                if resp.status != 200:
+                    return await message.reply_text(f"❌ Failed to fetch. Status: {resp.status}")
+                data = await resp.json()
+                url = data.get("result")
+                if not url:
+                    return await message.reply_text("❌ Token not found or expired.")
+                return await message.reply_text(f"🔗 Stored URL for token:\n`{url}`")
+    except Exception as e:
+        return await message.reply_text(f"❌ Error fetching token: `{e}`")
 
 # ==================== fetch
 @pbot.on_message(filters.command("fetch"))
