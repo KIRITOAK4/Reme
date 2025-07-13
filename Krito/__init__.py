@@ -36,10 +36,16 @@ MAX_PAGE = int(os.environ.get("MAX_PAGE", 4))
 # -------------------------------URLS AND SHORTENER------------------------
 TUTORIAL_URL = os.environ.get("TUTORIAL_URL", "")
 SHORT_URL = os.environ.get("SHORT_URL", "")
-USE_VERCEL_QUIZ = os.environ.get("USE_VERCEL_QUIZ", True).lower() == "true"
 SHORTEN_KEY = os.environ.get("SHORTEN_KEY", "atglinks.com ea08e13411f489f3e84f9bdac81c7e2024f01a82, shrinkme.io 10274e434e87cdc40c826abca429b8aa1ff1b90c")
+
+# ------------------------Special Environment----------
+" Notes: If enabling USE_VERCEL_QUIZ, ensure all special env vars are set properly."
+"If Not knowing what to set message at https://t.me/devil_testing_bot"
+
+USE_VERCEL_QUIZ = os.environ.get("USE_VERCEL_QUIZ", "false").lower() == "true"
 UPSTASH_REDIS_URL = os.environ.get("UPSTASH_REDIS_URL", "")
 UPSTASH_REDIS_TOKEN = os.environ.get("UPSTASH_REDIS_TOKEN", "")
+VERCEL_BASE_URL = os.environ.get("VERCEL_BASE_URL", "https://validate-user-tan.vercel.app")
 
 # -------------------------------LOGGING AND WEBHOOK----------------------
 LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", -1001682783965))
