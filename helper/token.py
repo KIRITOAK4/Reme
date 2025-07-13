@@ -7,7 +7,7 @@ from pytz import timezone
 from pyrogram import filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from helper.database import db
-from Krito import BOT_NAME, ADMIN, TOKEN_TIMEOUT, SP_USERS, TUTORIAL_URL, SHORT_URL, MAX_SPACE, USE_VERCEL_QUIZ, pbot
+from Krito import BOT_NAME, ADMIN, TOKEN_TIMEOUT, SP_USERS, TUTORIAL_URL, SHORT_URL, MAX_SPACE, USE_VERCEL_QUIZ, VERCEL_BASE_URL, pbot
 from shortener import shorten_url
 
 IST = timezone("Asia/Kolkata")  # Set to Indian Standard Time
@@ -27,13 +27,13 @@ async def get_vercel_quiz_url(final_url: str) -> str:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                "https://validate-user-tan.vercel.app/api/store-token",
+                f"{VERCEL_BASE_URL}/api/store-token",
                 json={"url": final_url}
             ) as resp:
                 data = await resp.json()
                 token = data.get("token")
                 if token:
-                    return f"https://validate-user-tan.vercel.app/?token={token}"
+                    return f"{VERCEL_BASE_URL}/?token={token}"
     except Exception as e:
         print(f"[get_vercel_quiz_url] Error: {e}")
 
