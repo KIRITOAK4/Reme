@@ -1,12 +1,11 @@
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaAnimation
 from Krito import pbot
 from helper.utils import humanbytes
 from helper.function import get_page_gif
 from .chatid import base_dir, get_chat_status
 from helper.database import db
 
-# Constants
 TEMPLATES = [
     "[S {season} Ep {episode}] {cz_name}",
     "[s {season} ep {episode}] {cz_name}",
@@ -33,15 +32,6 @@ def generate_buttons(button_data):
     return InlineKeyboardMarkup(
         [[InlineKeyboardButton(text, callback_data=callback)] for text, callback in button_data]
     )
-
-# SETTINGS MENU
-@pbot.on_message(filters.private & filters.command("settings"))
-async def settings_menu(client, message):
-    await render_settings_menu(client, message)
-
-@pbot.on_callback_query(filters.regex(r"settings_menu"))
-async def settings_menu_callback(client, callback_query):
-    await render_settings_menu(client, callback_query.message)
 
 async def render_settings_menu(client, message):
     user_id = message.from_user.id
@@ -80,12 +70,25 @@ async def render_settings_menu(client, message):
         ("Delete Settings", "settings_delete")
     ])
 
-    if thumbnail:
-        await message.reply_photo(photo=thumbnail, caption=caption, reply_markup=buttons)
-    else:
-        await message.reply_animation(animation=random_gif, caption=caption, reply_markup=buttons)
+    media = InputMediaPhoto(thumbnail, caption=caption) if thumbnail else InputMediaAnimation(random_gif, caption=caption)
+    try:
+        await message.edit_media(media=media, reply_markup=buttons)
+    except:
+        if thumbnail:
+            await message.reply_photo(photo=thumbnail, caption=caption, reply_markup=buttons)
+        else:
+            await message.reply_animation(animation=random_gif, caption=caption, reply_markup=buttons)
 
-# ---------------- BUTTON SELECTORS ----------------
+@pbot.on_message(filters.private & filters.command("settings"))
+async def settings_menu(client, message):
+    await render_settings_menu(client, message)
+
+@pbot.on_callback_query(filters.regex(r"settings_menu"))
+async def settings_menu_callback(client, callback_query):
+    await render_settings_menu(client, callback_query.message)
+
+# Remaining handlers for each button type will follow this structure
+# Example: Template selector handler
 
 @pbot.on_callback_query(filters.regex("settings_set_template"))
 async def open_template_selector(client, cq):
@@ -107,8 +110,8 @@ async def show_template_selector(client, cq, index=None):
 async def set_template(client, cq):
     i = int(cq.matches[0].group(1))
     await db.set_template(cq.from_user.id, TEMPLATES[i])
-    await cq.message.edit_text("✅ Template updated!")
-    await settings_menu_callback(client, cq)
+    await cq.answer("✅ Template updated!", show_alert=False)
+    await render_settings_menu(client, cq.message)
 
 @pbot.on_callback_query(filters.regex("settings_upload_option"))
 async def open_upload_selector(client, cq):
@@ -130,8 +133,8 @@ async def show_upload_selector(client, cq, index=None):
 async def set_upload_mode(client, cq):
     i = int(cq.matches[0].group(1))
     await db.set_uploadtype(cq.from_user.id, UPLOAD_MODES[i])
-    await cq.message.edit_text("✅ Upload mode updated!")
-    await settings_menu_callback(client, cq)
+    await cq.answer("✅ Upload mode updated!", show_alert=False)
+    await render_settings_menu(client, cq.message)
 
 @pbot.on_callback_query(filters.regex("settings_set_extension"))
 async def open_extension_selector(client, cq):
@@ -153,8 +156,8 @@ async def show_extension_selector(client, cq, index=None):
 async def set_extension(client, cq):
     i = int(cq.matches[0].group(1))
     await db.set_exten(cq.from_user.id, EXTENSIONS[i])
-    await cq.message.edit_text("✅ Extension updated!")
-    await settings_menu_callback(client, cq)
+    await cq.answer("✅ Extension updated!", show_alert=False)
+    await render_settings_menu(client, cq.message)
 
 @pbot.on_callback_query(filters.regex("settings_sample_button"))
 async def open_sample_selector(client, cq):
@@ -176,8 +179,8 @@ async def show_sample_selector(client, cq, index=None):
 async def set_sample_value(client, cq):
     i = int(cq.matches[0].group(1))
     await db.set_sample_value(cq.from_user.id, SAMPLE_VALUES[i])
-    await cq.message.edit_text("✅ Sample value updated!")
-    await settings_menu_callback(client, cq)
+    await cq.answer("✅ Sample value updated!", show_alert=False)
+    await render_settings_menu(client, cq.message)
 
 # ---------------- CAPTION & THUMBNAIL ----------------
 
@@ -281,27 +284,27 @@ async def delete_menu(client, cq):
 async def delete_caption(client, cq):
     await db.set_caption(cq.from_user.id, None)
     await cq.message.edit_text("❌ Caption reset.")
-    await settings_menu_callback(client, cq)
+    await render_settings_menu(client, cq.message)
 
 @pbot.on_callback_query(filters.regex("delete_thumbnail"))
 async def delete_thumbnail(client, cq):
     await db.set_thumbnail(cq.from_user.id, None)
     await cq.message.edit_text("❌ Thumbnail reset.")
-    await settings_menu_callback(client, cq)
+    await render_settings_menu(client, cq.message)
 
 @pbot.on_callback_query(filters.regex("delete_metadata"))
 async def delete_metadata(client, cq):
     default = {key: "t.me/devil_testing_bot" for key in METADATA_KEYS}
     await db.set_metadata(cq.from_user.id, default)
     await cq.message.edit_text("❌ Metadata reset.")
-    await settings_menu_callback(client, cq)
+    await render_settings_menu(client, cq.message)
 
 @pbot.on_callback_query(filters.regex("delete_chatid"))
 async def delete_chatid(client, cq):
     user_id = cq.from_user.id
     base_dir.pop(user_id, None)
     await cq.message.edit_text("✅ Chat ID deleted.")
-    await settings_menu_callback(client, cq)
+    await render_settings_menu(client, cq.message)
 
 @pbot.on_callback_query(filters.regex(r"delete_metadata_(title|artist|audio|video|author|subtitle)"))
 async def delete_individual_metadata(client, cq):
