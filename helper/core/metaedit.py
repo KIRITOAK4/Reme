@@ -3,18 +3,17 @@ import random
 import asyncio
 from helper.database import db
 from helper.utils import progress_for_pyrogram
-from Krito import ubot, pbot, USER_CHAT, MAX_SPACE
 
 
 async def change_metadata(input_path, output_path, metadata, ms):
     """
-    Adds metadata to the given video/audio file using ffmpeg.
+    Adds metadata to video/audio file using ffmpeg.
 
-    Parameters:
-        input_path (str): Path to the input media file.
-        output_path (str): Output path with metadata.
-        metadata (dict): Metadata keys - video_title, author, subtitle_title, audio_title, artist.
-        ms (Message): Pyrogram message object for status updates.
+    :param input_path: Path to input file.
+    :param output_path: Destination file with metadata added.
+    :param metadata: Dictionary with optional keys: video_title, author, subtitle_title, audio_title, artist.
+    :param ms: Pyrogram Message object to send status.
+    :return: Path to updated file or None on failure.
     """
     try:
         await ms.edit("⚙️ Adding metadata to the file...")
@@ -44,6 +43,7 @@ async def change_metadata(input_path, output_path, metadata, ms):
             return output_path
         else:
             raise Exception("Failed to add metadata")
+
     except Exception as e:
         await ms.reply_text(f"❌ Error adding metadata: `{e}`")
         return None
@@ -51,18 +51,18 @@ async def change_metadata(input_path, output_path, metadata, ms):
 
 async def generate_sample(input_path, output_path, user_id, ms):
     """
-    Generates a sample clip from the input video file using ffmpeg.
+    Creates a sample clip from video using ffmpeg.
 
-    Parameters:
-        input_path (str): Path to the input video.
-        output_path (str): Output path for the sample.
-        user_id (int): User ID to fetch sample duration.
-        ms (Message): Pyrogram message object for updates.
+    :param input_path: Source file path.
+    :param output_path: Where to save the sample clip.
+    :param user_id: Telegram user ID to fetch sample duration preference.
+    :param ms: Message for update/status.
+    :return: Sample path or None on failure.
     """
     try:
         sample_duration = await db.get_sample_value(user_id)
 
-        # Get total duration using ffprobe
+        # Fetch total duration of input file
         command = [
             'ffprobe', '-v', 'error', '-select_streams', 'v:0',
             '-show_entries', 'format=duration',
@@ -80,14 +80,15 @@ async def generate_sample(input_path, output_path, user_id, ms):
             raise Exception(stderr.decode().strip() or "Error retrieving video duration.")
 
         total_duration = float(stdout.decode().strip())
+
         if sample_duration > total_duration:
-            await ms.edit(f"❌ Requested sample duration ({sample_duration}s) is longer than video duration ({total_duration:.2f}s).")
+            await ms.edit(f"❌ Sample duration ({sample_duration}s) > video duration ({total_duration:.2f}s).")
             return None
 
         start_time = random.uniform(0, total_duration - sample_duration)
 
-        # Generate sample
         await ms.edit("🎬 Generating sample...")
+
         command = [
             'ffmpeg', '-y', '-i', input_path, '-ss', str(start_time),
             '-t', str(sample_duration), '-c', 'copy', output_path
@@ -103,7 +104,7 @@ async def generate_sample(input_path, output_path, user_id, ms):
             await ms.edit("✅ Sample generated successfully.")
             return output_path
         else:
-            raise Exception(stderr.decode().strip() or "Failed to generate sample.")
+            raise Exception(stderr.decode().strip() or "Sample generation failed.")
 
     except Exception as e:
         await ms.reply_text(f"❌ Error generating sample: `{e}`")
