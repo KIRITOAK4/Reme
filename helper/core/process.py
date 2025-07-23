@@ -1,13 +1,13 @@
 import os
 import time
 import asyncio
+import shutil
 from datetime import datetime
 from pytz import timezone
 from PIL import Image
 from pyrogram import Client, filters
 from pyrogram.types import Message, ForceReply, CallbackQuery
-from hachoir.metadata import extractMetadata
-from hachoir.parser import createParser
+from pymediainfo import MediaInfo
 
 from helper.utils import progress_for_pyrogram, convert, humanbytes
 from .metaedit import change_metadata
@@ -15,35 +15,45 @@ from helper.database import db
 from plugins.chatid import get_chat_status
 from Krito import ubot, pbot, USER_CHAT, MAX_SPACE
 
+def create_temp_dir(user_id: int) -> str:
+    ts = int(time.time() * 1000)
+    path = f"downloads/{user_id}/{ts}"
+    os.makedirs(path, exist_ok=True)
+    return path
+
 async def handle_metadata_info(client, cb: CallbackQuery, replied_msg):
-    txt_path = None
+    temp_path = None
     try:
         media = getattr(replied_msg, replied_msg.media.value, None)
         if not media or not media.file_name:
             await cb.answer("❌ Invalid media or missing filename.", show_alert=True)
             return
 
-        # Download file
         msg = await cb.message.reply_text("📥 Downloading file for metadata...")
-        file_path = f"downloads/{media.file_name}"
+        temp_path = create_temp_dir(cb.from_user.id)
+        file_path = os.path.join(temp_path, media.file_name)
 
-        path = await client.download_media(
+        await client.download_media(
             message=replied_msg,
             file_name=file_path,
             progress=progress_for_pyrogram,
             progress_args=("Downloading...", msg, time.time())
         )
 
-        # Extract metadata
-        parser = createParser(file_path)
-        metadata = extractMetadata(parser)
-        if not metadata:
+        media_info = MediaInfo.parse(file_path)
+        if not media_info or not media_info.tracks:
             await msg.edit("❌ Failed to extract metadata.")
             return
 
-        lines = metadata.exportPlaintext()  # Safe list of readable metadata lines
-        txt_path = f"downloads/{os.path.splitext(media.file_name)[0]}_metadata.txt"
+        lines = []
+        for track in media_info.tracks:
+            lines.append(f"[{track.track_type}]")
+            for key, value in track.to_data().items():
+                if value:
+                    lines.append(f"{key}: {value}")
+            lines.append("")  # Add empty line between tracks
 
+        txt_path = os.path.join(temp_path, f"{os.path.splitext(media.file_name)[0]}_metadata.txt")
         with open(txt_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
 
@@ -56,45 +66,45 @@ async def handle_metadata_info(client, cb: CallbackQuery, replied_msg):
 
     except Exception as e:
         await cb.message.reply_text(f"❌ Metadata error: {e}")
-
     finally:
-        # Clean up
-        if txt_path and os.path.exists(txt_path):
-            os.remove(txt_path)
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        if temp_path and os.path.exists(temp_path):
+            shutil.rmtree(temp_path, ignore_errors=True)
 
 async def process_rename(client: Client, original_message: Message, new_name: str):
+    user_id = original_message.from_user.id
+    temp_path = create_temp_dir(user_id)
     try:
         file = getattr(original_message, original_message.media.value)
-        file_path = f"downloads/{new_name}"
+        file_path = os.path.join(temp_path, new_name)
         ms = await original_message.reply_text("📥 Downloading the file...")
 
         try:
-            path = await client.download_media(
-                message=original_message, file_name=file_path,
-                progress=progress_for_pyrogram, progress_args=("Downloading...", ms, time.time())
+            await client.download_media(
+                message=original_message,
+                file_name=file_path,
+                progress=progress_for_pyrogram,
+                progress_args=("Downloading...", ms, time.time())
             )
         except Exception as e:
             await ms.edit_text(f"❌ Download failed: {e}")
-            if os.path.exists(file_path):
-                os.remove(file_path)
             return
 
-        metadata = await db.get_metadata(original_message.chat.id)
         duration = 0
         try:
-            meta = extractMetadata(createParser(file_path))
-            if meta and meta.has("duration"):
-                duration = meta.get("duration").seconds
+            media_info = MediaInfo.parse(file_path)
+            for track in media_info.tracks:
+                if track.track_type in ["Audio", "Video"] and track.duration:
+                    duration = int(track.duration // 1000)
+                    break
         except:
             pass
 
-        updated_path = file_path
-        await process_final_upload(client, original_message, file, updated_path, new_name, duration, file_path, ms)
+        await process_final_upload(client, original_message, file, file_path, new_name, duration, file_path, ms)
 
     except Exception as e:
         await original_message.reply_text(f"❌ An error occurred: {e}")
+    finally:
+        shutil.rmtree(temp_path, ignore_errors=True)
 
 @pbot.on_message(filters.private & filters.reply)
 async def refunc(client: Client, message: Message):
@@ -102,46 +112,45 @@ async def refunc(client: Client, message: Message):
     if reply_message and isinstance(reply_message.reply_markup, ForceReply):
         new_name = message.text
         await message.delete()
-        
+
         original = await client.get_messages(message.chat.id, reply_message.id)
         ori_msg = original.reply_to_message
         file = getattr(ori_msg, ori_msg.media.value)
 
+        extn = new_name.rsplit(".", 1)[-1] if "." in new_name else await db.get_exten(message.chat.id) or file.file_name.rsplit(".", 1)[-1]
         if "." not in new_name:
-            extn = await db.get_exten(message.chat.id) or file.file_name.rsplit(".", 1)[-1]
-            new_name = f"{new_name}.{extn}"
+            new_name += f".{extn}"
 
-        file_path = f"downloads/{new_name}"
+        temp_path = create_temp_dir(message.from_user.id)
+        file_path = os.path.join(temp_path, new_name)
         await reply_message.delete()
         ms = await message.reply_text("📥 Downloading the file...")
         try:
-            path = await client.download_media(
-                message=ori_msg, file_name=file_path,
+            await client.download_media(
+                message=ori_msg,
+                file_name=file_path,
                 progress=progress_for_pyrogram,
                 progress_args=("Downloading...", ms, time.time())
             )
         except Exception as e:
             await ms.edit(f"❌ Download failed: {e}")
-            if os.path.exists(file_path):
-                os.remove(file_path)
             return
 
-        duration = 0  # fail-safe default
+        duration = 0
         try:
-            meta = extractMetadata(createParser(file_path))
-            if meta and meta.has("duration"):
-                duration = meta.get("duration").seconds
+            media_info = MediaInfo.parse(file_path)
+            for track in media_info.tracks:
+                if track.track_type in ["Audio", "Video"] and track.duration:
+                    duration = int(track.duration // 1000)
+                    break
             await ms.edit("✏️ Changing metadata...")
         except Exception as e:
             await ms.edit(f"❌ Metadata error: {e}")
-            if os.path.exists(file_path):
-                os.remove(file_path)
             return
 
         metadata = await db.get_metadata(message.chat.id)
         if file_path.endswith(('.mkv', '.mp4', '.mp3')):
-            if not os.path.exists("Metadata"):
-                os.mkdir("Metadata")
+            os.makedirs("Metadata", exist_ok=True)
             updated_path = f"Metadata/{new_name}"
             metadata_dict = {
                 "video_title": metadata.get("video"),
@@ -158,25 +167,19 @@ async def refunc(client: Client, message: Message):
             await ms.edit("⏳ File format not supported for metadata change, proceeding with upload ⚡")
 
         await process_final_upload(client, message, file, updated_path, new_name, duration, file_path, ms)
+        shutil.rmtree(temp_path, ignore_errors=True)
 
 async def process_final_upload(client, message, file, updated_path, new_name, duration, file_path, ms):
     try:
         await ms.edit("📤 Uploading the file...")
-
         c_caption = await db.get_caption(message.chat.id)
         c_thumb = await db.get_thumbnail(message.chat.id)
 
-        if c_caption:
-            try:
-                caption = c_caption.format(
-                    filename=new_name,
-                    filesize=humanbytes(file.file_size),
-                    duration=convert(duration)
-                )
-            except Exception as e:
-                raise Exception(f"Caption formatting error: {e}")
-        else:
-            caption = f"**{new_name}**"
+        caption = c_caption.format(
+            filename=new_name,
+            filesize=humanbytes(file.file_size),
+            duration=convert(duration)
+        ) if c_caption else f"**{new_name}**"
 
         thumbnail_path = None
         if file.thumbs or c_thumb:
