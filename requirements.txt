@@ -4,7 +4,8 @@ dnspython
 ffmpeg-python  
 hachoir
 motor  
-Pillow  
+Pillow
+pymediainfo
 pytz
 TgCrypto
 telegraph  
