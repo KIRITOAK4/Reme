@@ -36,7 +36,7 @@ MAX_PAGE = int(os.environ.get("MAX_PAGE", 4))
 # -------------------------------URLS AND SHORTENER------------------------
 TUTORIAL_URL = os.environ.get("TUTORIAL_URL", "")
 SHORT_URL = os.environ.get("SHORT_URL", "")
-SHORTEN_KEY = os.environ.get("SHORTEN_KEY", "atglinks.com ea08e13411f489f3e84f9bdac81c7e2024f01a82, shrinkme.io 10274e434e87cdc40c826abca429b8aa1ff1b90c")
+SHORTEN_KEY = os.environ.get("SHORTEN_KEY", "gplinks.com 0e4a8a6b2464934715773300620d424b371815c3, shrinkme.io 10274e434e87cdc40c826abca429b8aa1ff1b90c")
 
 # ------------------------Special Environment----------
 " Notes: If enabling USE_VERCEL_QUIZ, ensure all special env vars are set properly."
