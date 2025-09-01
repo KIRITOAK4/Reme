@@ -14,7 +14,7 @@ SESSION_STRING = os.environ.get("SESSION_STRING", "None")
 # -------------------------------VARS-----------------------------------------
 API_ID = int(os.environ.get("API_ID", 14712540))
 API_HASH = os.environ.get("API_HASH", "e61b996dc037d969a4f8cf6411bb6165")
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "6202042878:AAHNkvyD6YbZtQu_-O95mFXHFI96P0FEK2E")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "6202042878:AAFnzaMyzIuw4SD_dzslYmiGETHDCAoze14")
 BOT_NAME = os.environ.get("BOT_NAME", "ya_typobot")
 BOT_UPTIME = time.time()
 USER_CHAT = int(os.environ.get("USER_CHAT", -1001799776296))
