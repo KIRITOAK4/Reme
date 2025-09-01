@@ -8,6 +8,8 @@ from PIL import Image
 from pyrogram import Client, filters
 from pyrogram.types import Message, ForceReply, CallbackQuery
 from pymediainfo import MediaInfo
+from hachoir.parser import createParser
+from hachoir.metadata import extractMetadata
 
 from helper.utils import progress_for_pyrogram, convert, humanbytes
 from .metaedit import change_metadata
@@ -21,6 +23,7 @@ def create_temp_dir(user_id: int) -> str:
     os.makedirs(path, exist_ok=True)
     return path
 
+# ✅ Keep pymediainfo for this function
 async def handle_metadata_info(client, cb: CallbackQuery, replied_msg):
     temp_path = None
     try:
@@ -51,7 +54,7 @@ async def handle_metadata_info(client, cb: CallbackQuery, replied_msg):
             for key, value in track.to_data().items():
                 if value:
                     lines.append(f"{key}: {value}")
-            lines.append("")  # Add empty line between tracks
+            lines.append("")
 
         txt_path = os.path.join(temp_path, f"{os.path.splitext(media.file_name)[0]}_metadata.txt")
         with open(txt_path, "w", encoding="utf-8") as f:
@@ -70,6 +73,7 @@ async def handle_metadata_info(client, cb: CallbackQuery, replied_msg):
         if temp_path and os.path.exists(temp_path):
             shutil.rmtree(temp_path, ignore_errors=True)
 
+# ✅ process_rename now uses hachoir for duration
 async def process_rename(client: Client, original_message: Message, new_name: str):
     user_id = original_message.from_user.id
     temp_path = create_temp_dir(user_id)
@@ -89,15 +93,16 @@ async def process_rename(client: Client, original_message: Message, new_name: st
             await ms.edit_text(f"❌ Download failed: {e}")
             return
 
+        # ✅ Extract duration using hachoir
         duration = 0
         try:
-            media_info = MediaInfo.parse(file_path)
-            for track in media_info.tracks:
-                if track.track_type in ["Audio", "Video"] and track.duration:
-                    duration = int(track.duration // 1000)
-                    break
-        except:
-            pass
+            parser = createParser(file_path)
+            if parser:
+                metadata = extractMetadata(parser)
+                if metadata and metadata.has("duration"):
+                    duration = int(metadata.get("duration").total_seconds())
+        except Exception:
+            duration = 0
 
         await process_final_upload(client, original_message, file, file_path, new_name, duration, file_path, ms)
 
@@ -106,6 +111,7 @@ async def process_rename(client: Client, original_message: Message, new_name: st
     finally:
         shutil.rmtree(temp_path, ignore_errors=True)
 
+# ✅ refunc now uses hachoir for duration
 @pbot.on_message(filters.private & filters.reply)
 async def refunc(client: Client, message: Message):
     reply_message = message.reply_to_message
@@ -136,13 +142,14 @@ async def refunc(client: Client, message: Message):
             await ms.edit(f"❌ Download failed: {e}")
             return
 
+        # ✅ Extract duration using hachoir
         duration = 0
         try:
-            media_info = MediaInfo.parse(file_path)
-            for track in media_info.tracks:
-                if track.track_type in ["Audio", "Video"] and track.duration:
-                    duration = int(float(track.duration) // 1000)
-                    break
+            parser = createParser(file_path)
+            if parser:
+                metadata = extractMetadata(parser)
+                if metadata and metadata.has("duration"):
+                    duration = int(metadata.get("duration").total_seconds())
             await ms.edit("✏️ Changing metadata...")
         except Exception as e:
             await ms.edit(f"❌ Metadata error: {e}")
