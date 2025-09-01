@@ -141,7 +141,7 @@ async def refunc(client: Client, message: Message):
             media_info = MediaInfo.parse(file_path)
             for track in media_info.tracks:
                 if track.track_type in ["Audio", "Video"] and track.duration:
-                    duration = int(track.duration // 1000)
+                    duration = int(float(track.duration) // 1000)
                     break
             await ms.edit("✏️ Changing metadata...")
         except Exception as e:
