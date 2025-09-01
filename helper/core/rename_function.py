@@ -9,7 +9,7 @@ from .process import process_rename
 from Krito import ubot
 
 async def handle_sample(client, cb, file, original_msg):
-    if not (file.mime_type and file.mime_type.startswith("video/") or file.file_name.lower().endswith((".mkv", ".mp4"))):
+    if not (file.mime_type and file.mime_type.startswith("video/")):
         await cb.answer("❌ Only video files (.mkv, .mp4) are supported.", show_alert=True)
         return
 
