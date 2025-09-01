@@ -61,8 +61,11 @@ async def generate_sample(input_path, output_path, user_id, ms):
     """
     try:
         sample_duration = await db.get_sample_value(user_id)
+        if not sample_duration or sample_duration <= 0:
+            await ms.edit("❌ Invalid sample duration.")
+            return None
 
-        # Fetch total duration of input file
+        # Get total duration using ffprobe
         command = [
             'ffprobe', '-v', 'error', '-select_streams', 'v:0',
             '-show_entries', 'format=duration',
@@ -81,14 +84,17 @@ async def generate_sample(input_path, output_path, user_id, ms):
 
         total_duration = float(stdout.decode().strip())
 
+        # Validate sample duration
         if sample_duration > total_duration:
-            await ms.edit(f"❌ Sample duration ({sample_duration}s) > video duration ({total_duration:.2f}s).")
+            await ms.edit(f"❌ Sample duration ({sample_duration}s) is longer than video duration ({total_duration:.2f}s).")
             return None
 
-        start_time = random.uniform(0, total_duration - sample_duration)
+        # Pick a random start time ensuring it fits in the video length
+        start_time = round(random.uniform(0, total_duration - sample_duration), 2)
 
-        await ms.edit("🎬 Generating sample...")
+        await ms.edit(f"🎬 Generating sample...\n⏱ Total: {round(total_duration)}s | Sample: {sample_duration}s | Start: {start_time}s")
 
+        # Generate sample using ffmpeg (copy codecs for speed)
         command = [
             'ffmpeg', '-y', '-i', input_path, '-ss', str(start_time),
             '-t', str(sample_duration), '-c', 'copy', output_path
@@ -101,7 +107,7 @@ async def generate_sample(input_path, output_path, user_id, ms):
         stdout, stderr = await process.communicate()
 
         if os.path.exists(output_path):
-            await ms.edit("✅ Sample generated successfully.")
+            await ms.edit(f"✅ Sample generated successfully!\n📏 {sample_duration}s from {start_time}s of {round(total_duration)}s")
             return output_path
         else:
             raise Exception(stderr.decode().strip() or "Sample generation failed.")
@@ -109,3 +115,4 @@ async def generate_sample(input_path, output_path, user_id, ms):
     except Exception as e:
         await ms.reply_text(f"❌ Error generating sample: `{e}`")
         return None
+
