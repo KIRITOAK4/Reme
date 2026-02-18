@@ -3,6 +3,8 @@ WORKDIR /app
 
 # Install system dependencies including ffmpeg
 RUN apt-get update && apt-get install -y \
+    git \
+    mediainfo \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
