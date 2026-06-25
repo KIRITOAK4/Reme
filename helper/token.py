@@ -20,7 +20,38 @@ def get_last_reset_time(token_timeout):
         reset_time -= timedelta(days=1)
     return reset_time
 
+
 async def get_vercel_quiz_url(final_url: str, user_id: int, username: str) -> str:
+    if not USE_VERCEL_QUIZ:
+        return final_url
+
+    payload = {
+        "url": final_url,
+        "userId": user_id,
+        "username": username
+    }
+
+    print("Sending payload:", payload)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{VERCEL_BASE_URL}/api/store-token",
+                json=payload
+            ) as resp:
+                data = await resp.json()
+                print("Response:", data)
+
+                token = data.get("token")
+                if token:
+                    return f"{VERCEL_BASE_URL}/?token={token}"
+
+    except Exception as e:
+        print(f"[get_vercel_quiz_url] Error: {e}")
+
+    return final_url
+
+"""async def get_vercel_quiz_url(final_url: str, user_id: int, username: str) -> str:
     if not USE_VERCEL_QUIZ:
         return final_url
 
@@ -40,7 +71,7 @@ async def get_vercel_quiz_url(final_url: str, user_id: int, username: str) -> st
     except Exception as e:
         print(f"[get_vercel_quiz_url] Error: {e}")
 
-    return final_url
+    return final_url"""
 
 async def generate_buttons(new_token: str, user_id: int, username: str):
     final_url = shorten_url(f'https://telegram.me/{BOT_NAME}?start={new_token}')
