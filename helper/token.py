@@ -29,7 +29,7 @@ async def get_vercel_quiz_url(final_url: str, user_id: int, username: str) -> st
             async with session.post(
                 f"{VERCEL_BASE_URL}/api/store-token",
                 json={"url": final_url,
-                     "userid": user_id,
+                     "userId": user_id,
                      "username": username
                      }
             ) as resp:
