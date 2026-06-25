@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import time
@@ -46,10 +47,10 @@ async def bypass_token(client, message: Message):
                 if resp.status != 200:
                     return await message.reply_text(f"❌ Failed to fetch. Status: {resp.status}")
                 data = await resp.json()
-                url = data.get("result")
-                if not url:
+                result = data.get("result")
+                if not result:
                     return await message.reply_text("❌ Token not found or expired.")
-                return await message.reply_text(f"🔗 Stored URL for token:\n`{url}`")
+                return await message.reply_text(f"🔗 Stored URL for token:\n`{result}`")
     except Exception as e:
         return await message.reply_text(f"❌ Error fetching token: `{e}`")
 
