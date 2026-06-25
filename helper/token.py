@@ -20,7 +20,7 @@ def get_last_reset_time(token_timeout):
         reset_time -= timedelta(days=1)
     return reset_time
 
-async def get_vercel_quiz_url(final_url: str) -> str:
+async def get_vercel_quiz_url(final_url: str, user_id: int, username: str) -> str:
     if not USE_VERCEL_QUIZ:
         return final_url
 
@@ -28,7 +28,10 @@ async def get_vercel_quiz_url(final_url: str) -> str:
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f"{VERCEL_BASE_URL}/api/store-token",
-                json={"url": final_url}
+                json={"url": final_url,
+                     "userid": user_id,
+                     "username": username
+                     }
             ) as resp:
                 data = await resp.json()
                 token = data.get("token")
@@ -39,9 +42,9 @@ async def get_vercel_quiz_url(final_url: str) -> str:
 
     return final_url
 
-async def generate_buttons(new_token: str):
+async def generate_buttons(new_token: str, user_id: int, username: str):
     final_url = shorten_url(f'https://telegram.me/{BOT_NAME}?start={new_token}')
-    vercel_url = await get_vercel_quiz_url(final_url)
+    vercel_url = await get_vercel_quiz_url(final_url, user_id, username)
 
     buttons = []
     if TUTORIAL_URL:
@@ -78,8 +81,9 @@ async def validate_user(message, button=None):
             await db.set_token(userid, new_token)
 
             if button is None:
-                button = await generate_buttons(new_token)
-
+                user = message.from_user
+                button = await generate_buttons(new_token, user.id, user.username or user.first_name)
+                
             error_msg = '⚠️ Your token has expired. Please refresh your token to continue.'
             return error_msg, button
 
